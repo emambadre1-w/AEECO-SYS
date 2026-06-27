@@ -500,7 +500,7 @@
                     <button class="tab" data-ktab="bank" data-i18n="kBank">الإشعارات البنكية</button>
                 </div>
                 <div class="kitchen-tab-content" id="ktab-provisions"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px"><h3 style="margin:0;font-size:16px">الأصناف والمؤن</h3><button class="btn btn-primary" onclick="openKitchenItemModal()"><i class="fas fa-plus"></i> إضافة صنف</button></div><div class="table-container" style="margin-bottom:26px"><table><thead><tr><th>الصنف</th><th>الوحدة</th><th>الكمية الحالية</th><th>حد التنبيه</th><th>الإجراءات</th></tr></thead><tbody id="kitchenItemsBody"></tbody></table></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px"><h3 style="margin:0;font-size:16px">حركة المخزون</h3><button class="btn btn-primary" onclick="openKitchenMovementModal()"><i class="fas fa-exchange-alt"></i> تسجيل حركة</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الصنف</th><th>النوع</th><th>الكمية</th><th>ملاحظة</th></tr></thead><tbody id="kitchenMovementsBody"></tbody></table></div></div>
-                <div class="kitchen-tab-content" id="ktab-expenses" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
+                <div class="kitchen-tab-content" id="ktab-expenses" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px"><div><h3 style="margin:0;font-size:16px">المصروفات اليومية</h3><span id="kExpTotal" style="font-size:13px;color:var(--text-muted)"></span></div><button class="btn btn-primary" onclick="openKitchenExpenseModal()"><i class="fas fa-plus"></i> تسجيل مصروف</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفئة</th><th>المبلغ</th><th>الإجراءات</th></tr></thead><tbody id="kitchenExpensesBody"></tbody></table></div></div>
                 <div class="kitchen-tab-content" id="ktab-invoices" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
                 <div class="kitchen-tab-content" id="ktab-bank" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
             </div>
@@ -718,6 +718,7 @@
     <!-- Kitchen Modals -->
     <div class="modal-overlay" id="kitchenItemModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">صنف / مؤن</h3><button class="modal-close" onclick="closeModal('kitchenItemModal')">&times;</button></div><div class="modal-body"><form id="kitchenItemForm"><input type="hidden" id="kItemId"><div class="form-row"><div class="form-group"><label class="form-label">اسم الصنف</label><input type="text" class="form-input" id="kItemName" required></div><div class="form-group"><label class="form-label">الوحدة</label><input type="text" class="form-input" id="kItemUnit" placeholder="كجم / لتر / قطعة"></div></div><div class="form-row"><div class="form-group"><label class="form-label">الكمية الحالية</label><input type="number" step="any" class="form-input" id="kItemQty" value="0"></div><div class="form-group"><label class="form-label">حد التنبيه (اختياري)</label><input type="number" step="any" class="form-input" id="kItemReorder"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenItemModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenItem()">حفظ</button></div></div></div>
     <div class="modal-overlay" id="kitchenMovementModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">حركة مخزون</h3><button class="modal-close" onclick="closeModal('kitchenMovementModal')">&times;</button></div><div class="modal-body"><form id="kitchenMovementForm"><div class="form-row"><div class="form-group"><label class="form-label">الصنف</label><select class="form-select" id="kMovItem" required></select></div><div class="form-group"><label class="form-label">النوع</label><select class="form-select" id="kMovType"><option value="in">إدخال</option><option value="out">إخراج</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">الكمية</label><input type="number" step="any" min="0" class="form-input" id="kMovQty" required></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="kMovDate"></div></div><div class="form-group"><label class="form-label">ملاحظة</label><input type="text" class="form-input" id="kMovNote"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenMovementModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenMovement()">حفظ</button></div></div></div>
+    <div class="modal-overlay" id="kitchenExpenseModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">مصروف يومي</h3><button class="modal-close" onclick="closeModal('kitchenExpenseModal')">&times;</button></div><div class="modal-body"><form id="kitchenExpenseForm"><input type="hidden" id="kExpId"><div class="form-row"><div class="form-group"><label class="form-label">البيان</label><input type="text" class="form-input" id="kExpDesc" required></div><div class="form-group"><label class="form-label">المبلغ</label><input type="number" step="any" min="0" class="form-input" id="kExpAmount" required></div></div><div class="form-row"><div class="form-group"><label class="form-label">الفئة</label><select class="form-select" id="kExpCategory"><option value="produce">خضار وفواكه</option><option value="meat">لحوم ودواجن</option><option value="grocery">بقالة ومؤن</option><option value="gas">غاز ووقود</option><option value="maintenance">صيانة</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="kExpDate"></div></div><div class="form-group"><label class="form-label">ملاحظة (اختياري)</label><input type="text" class="form-input" id="kExpNote"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenExpenseModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenExpense()">حفظ</button></div></div></div>
     <!-- PR Modals -->
     <div class="modal-overlay" id="prContactModal"><div class="modal"><div class="modal-header"><h3 class="modal-title" data-i18n="addContact">إضافة جهة اتصال</h3><button class="modal-close" onclick="closeModal('prContactModal')">&times;</button></div><div class="modal-body"><form id="prContactForm"><input type="hidden" id="prContactId"><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="name">الاسم</label><input type="text" class="form-input" id="prContactName" required></div><div class="form-group"><label class="form-label" data-i18n="organization">المؤسسة</label><input type="text" class="form-input" id="prContactOrg"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="type">النوع</label><select class="form-select" id="prContactType"><option value="client">عميل</option><option value="partner">شريك</option><option value="media">وسيلة إعلام</option><option value="government">جهة حكومية</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label" data-i18n="phone">الهاتف</label><input type="text" class="form-input" id="prContactPhone"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="email">البريد الإلكتروني</label><input type="email" class="form-input" id="prContactEmail"></div><div class="form-group"><label class="form-label" data-i18n="address">العنوان</label><input type="text" class="form-input" id="prContactAddress"></div></div><div class="form-group"><label class="form-label" data-i18n="notes">ملاحظات</label><textarea class="form-textarea" id="prContactNotes"></textarea></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('prContactModal')" data-i18n="cancel">إلغاء</button><button class="btn btn-primary" onclick="savePRContact()" data-i18n="save">حفظ</button></div></div></div>
 
@@ -1208,10 +1209,11 @@
             });
         });
         // ===================== Kitchen: Provisions & Stock =====================
-        let kitchenData = { items: [], movements: [] };
+        let kitchenData = { items: [], movements: [], expenses: [] };
         async function loadKitchenModule() {
             await loadKitchenItems();
             await loadKitchenMovements();
+            await loadKitchenExpenses();
         }
         async function loadKitchenItems() {
             const { data: rows, error } = await supabaseClient.from('kitchen_items').select('*').order('name');
@@ -1319,6 +1321,74 @@
             closeModal('kitchenMovementModal');
             await loadKitchenItems();
             await loadKitchenMovements();
+        }
+        // ===================== Kitchen: Daily Expenses =====================
+        const K_EXP_CAT = { produce: 'خضار وفواكه', meat: 'لحوم ودواجن', grocery: 'بقالة ومؤن', gas: 'غاز ووقود', maintenance: 'صيانة', other: 'أخرى' };
+        async function loadKitchenExpenses() {
+            const { data: rows, error } = await supabaseClient.from('kitchen_expenses').select('*').order('expense_date', { ascending: false });
+            if (error) { console.warn('kitchen_expenses:', error.message); return; }
+            kitchenData.expenses = rows || [];
+            renderKitchenExpenses();
+        }
+        function renderKitchenExpenses() {
+            const tbody = document.getElementById('kitchenExpensesBody');
+            if (!tbody) return;
+            const totalEl = document.getElementById('kExpTotal');
+            if (!kitchenData.expenses || !kitchenData.expenses.length) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px">${t('noData')}</td></tr>`;
+                if (totalEl) totalEl.textContent = '';
+                return;
+            }
+            const total = kitchenData.expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+            const cur = (data.settings && data.settings.currency) || 'SDG';
+            if (totalEl) totalEl.textContent = `الإجمالي: ${total.toLocaleString()} ${cur}`;
+            tbody.innerHTML = kitchenData.expenses.map(e => `<tr><td>${esc(e.expense_date || '-')}</td><td>${esc(e.description)}${e.note ? ` <span style="color:var(--text-muted);font-size:12px">(${esc(e.note)})</span>` : ''}</td><td><span class="badge badge-info">${K_EXP_CAT[e.category] || esc(e.category || '-')}</span></td><td style="font-family:var(--font-mono)">${(parseFloat(e.amount) || 0).toLocaleString()} ${esc(e.currency || cur)}</td><td><button class="btn btn-sm btn-secondary" onclick="editKitchenExpense('${e.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteKitchenExpense('${e.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+        }
+        function openKitchenExpenseModal() {
+            document.getElementById('kitchenExpenseForm').reset();
+            document.getElementById('kExpId').value = '';
+            document.getElementById('kExpDate').value = new Date().toISOString().slice(0, 10);
+            openModal('kitchenExpenseModal');
+        }
+        function editKitchenExpense(id) {
+            const e = kitchenData.expenses.find(x => String(x.id) === String(id));
+            if (!e) return;
+            document.getElementById('kExpId').value = e.id;
+            document.getElementById('kExpDesc').value = e.description || '';
+            document.getElementById('kExpAmount').value = e.amount != null ? e.amount : '';
+            document.getElementById('kExpCategory').value = e.category || 'other';
+            document.getElementById('kExpDate').value = e.expense_date || new Date().toISOString().slice(0, 10);
+            document.getElementById('kExpNote').value = e.note || '';
+            openModal('kitchenExpenseModal');
+        }
+        async function saveKitchenExpense() {
+            const desc = document.getElementById('kExpDesc').value.trim();
+            const amount = parseFloat(document.getElementById('kExpAmount').value);
+            if (!desc || !(amount > 0)) { showToast('warning', t('fillRequired'), ''); return; }
+            const payload = {
+                description: desc,
+                amount: amount,
+                currency: (data.settings && data.settings.currency) || 'SDG',
+                category: document.getElementById('kExpCategory').value,
+                expense_date: document.getElementById('kExpDate').value || new Date().toISOString().slice(0, 10),
+                note: document.getElementById('kExpNote').value.trim() || null,
+                created_by: currentUser.id
+            };
+            const editId = document.getElementById('kExpId').value;
+            let error;
+            if (editId) { ({ error } = await supabaseClient.from('kitchen_expenses').update(payload).eq('id', editId)); }
+            else { ({ error } = await supabaseClient.from('kitchen_expenses').insert(payload)); }
+            if (error) { showToast('error', 'Error', error.message); return; }
+            showToast('success', 'تم الحفظ', '');
+            closeModal('kitchenExpenseModal');
+            await loadKitchenExpenses();
+        }
+        async function deleteKitchenExpense(id) {
+            if (!confirm('حذف هذا المصروف؟')) return;
+            const { error } = await supabaseClient.from('kitchen_expenses').delete().eq('id', id);
+            if (error) { showToast('error', 'Error', error.message); return; }
+            showToast('success', 'تم الحذف', '');
+            await loadKitchenExpenses();
         }
         function openSectionGuide() {
             const activePage = document.querySelector('.page.active');
