@@ -565,8 +565,8 @@
                     <button class="tab active" data-stab="correspondence" data-i18n="sCorrespondence">دفتر المراسلات</button>
                     <button class="tab" data-stab="appointments" data-i18n="sAppointments">المواعيد والاجتماعات</button>
                 </div>
-                <div class="secretary-tab-content" id="stab-correspondence"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
-                <div class="secretary-tab-content" id="stab-appointments" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
+                <div class="secretary-tab-content" id="stab-correspondence"><div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-primary" onclick="openCorrespondenceModal()"><i class="fas fa-plus"></i> تسجيل خطاب</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الرقم</th><th>النوع</th><th>الجهة</th><th>الموضوع</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody id="correspondenceBody"></tbody></table></div></div>
+                <div class="secretary-tab-content" id="stab-appointments" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-primary" onclick="openAppointmentModal()"><i class="fas fa-plus"></i> إضافة موعد</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>الموضوع</th><th>مع</th><th>المكان</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody id="appointmentsBody"></tbody></table></div></div>
             </div>
             <div class="page" id="page-kitchen">
                 <div class="page-header">
@@ -794,6 +794,9 @@
         </div>
     </div>
     <div class="modal-overlay" id="newRequestModal"><div class="modal"><div class="modal-header"><h3 class="modal-title" data-i18n="newRequest">طلب جديد</h3><button class="modal-close" onclick="closeModal('newRequestModal')">&times;</button></div><div class="modal-body"><form id="newRequestForm"><div class="form-group"><label class="form-label" data-i18n="requestType">نوع الطلب</label><select class="form-select" id="reqType" required onchange="toggleAmountField()"><option value="leave" data-i18n="reqTypeLeave">إجازة</option><option value="expense" data-i18n="reqTypeExpense">سلفة / مصروف مالي</option><option value="purchase" data-i18n="reqTypePurchase">شراء مستلزمات / معدات</option><option value="maintenance" data-i18n="reqTypeMaintenance">صيانة / دعم تقني</option><option value="general" data-i18n="reqTypeGeneral">طلب عام آخر</option></select></div><div class="form-group"><label class="form-label" data-i18n="title">العنوان</label><input type="text" class="form-input" id="reqTitle" required></div><div class="form-group"><label class="form-label" data-i18n="description">التفاصيل</label><textarea class="form-textarea" id="reqDescription" required></textarea></div><div class="form-group app-hidden" id="reqAmountGroup"><label class="form-label" data-i18n="amount">المبلغ</label><input type="number" class="form-input" id="reqAmount" min="0" step="0.01"></div><div class="form-group"><label class="form-label" data-i18n="approvalPath">مسار الموافقة</label><div class="stage-track" id="reqStagePreview"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('newRequestModal')" data-i18n="cancel">إلغاء</button><button class="btn btn-primary" onclick="submitNewRequest()" id="reqSubmitBtn" data-i18n="submitRequest">إرسال الطلب</button></div></div></div>
+    <!-- Secretary Modals -->
+    <div class="modal-overlay" id="correspondenceModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">خطاب / مراسلة</h3><button class="modal-close" onclick="closeModal('correspondenceModal')">&times;</button></div><div class="modal-body"><form id="correspondenceForm"><input type="hidden" id="corrId"><div class="form-row"><div class="form-group"><label class="form-label">رقم الخطاب</label><input type="text" class="form-input" id="corrRef"></div><div class="form-group"><label class="form-label">النوع</label><select class="form-select" id="corrDirection"><option value="incoming">وارد</option><option value="outgoing">صادر</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">الجهة</label><input type="text" class="form-input" id="corrParty" required></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="corrDate" required></div></div><div class="form-group"><label class="form-label">الموضوع</label><input type="text" class="form-input" id="corrSubject" required></div><div class="form-row"><div class="form-group"><label class="form-label">الحالة</label><select class="form-select" id="corrStatus"><option value="pending">تحت الإجراء</option><option value="replied">تم الرد</option><option value="closed">مغلق</option><option value="info">للعلم</option></select></div></div><div class="form-group"><label class="form-label">ملاحظات</label><textarea class="form-textarea" id="corrNotes"></textarea></div><div class="form-group"><label class="form-label">صورة الخطاب</label><input type="file" class="form-input" id="corrImage" accept="image/*,application/pdf"><div id="corrUploadStatus" style="font-size:12px;color:var(--text-secondary);margin-top:4px;"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('correspondenceModal')">إلغاء</button><button class="btn btn-primary" onclick="saveCorrespondence()" id="corrSaveBtn">حفظ</button></div></div></div>
+    <div class="modal-overlay" id="appointmentModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">موعد / اجتماع</h3><button class="modal-close" onclick="closeModal('appointmentModal')">&times;</button></div><div class="modal-body"><form id="appointmentForm"><input type="hidden" id="apptId"><div class="form-group"><label class="form-label">الموضوع</label><input type="text" class="form-input" id="apptTitle" required></div><div class="form-row"><div class="form-group"><label class="form-label">مع (الجهة/الشخص)</label><input type="text" class="form-input" id="apptWith"></div><div class="form-group"><label class="form-label">المكان</label><input type="text" class="form-input" id="apptLocation"></div></div><div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="apptDate" required></div><div class="form-group"><label class="form-label">الوقت</label><input type="time" class="form-input" id="apptTime"></div></div><div class="form-row"><div class="form-group"><label class="form-label">الحالة</label><select class="form-select" id="apptStatus"><option value="upcoming">قادم</option><option value="done">تم</option><option value="postponed">مؤجّل</option><option value="cancelled">ملغى</option></select></div></div><div class="form-group"><label class="form-label">ملاحظات</label><textarea class="form-textarea" id="apptNotes"></textarea></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('appointmentModal')">إلغاء</button><button class="btn btn-primary" onclick="saveAppointment()">حفظ</button></div></div></div>
     <!-- Kitchen Modals -->
     <div class="modal-overlay" id="kitchenItemModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">صنف / مؤن</h3><button class="modal-close" onclick="closeModal('kitchenItemModal')">&times;</button></div><div class="modal-body"><form id="kitchenItemForm"><input type="hidden" id="kItemId"><div class="form-row"><div class="form-group"><label class="form-label">اسم الصنف</label><input type="text" class="form-input" id="kItemName" required></div><div class="form-group"><label class="form-label">الوحدة</label><input type="text" class="form-input" id="kItemUnit" placeholder="كجم / لتر / قطعة"></div></div><div class="form-row"><div class="form-group"><label class="form-label">الكمية الحالية</label><input type="number" step="any" class="form-input" id="kItemQty" value="0"></div><div class="form-group"><label class="form-label">حد التنبيه (اختياري)</label><input type="number" step="any" class="form-input" id="kItemReorder"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenItemModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenItem()">حفظ</button></div></div></div>
     <div class="modal-overlay" id="kitchenMovementModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">حركة مخزون</h3><button class="modal-close" onclick="closeModal('kitchenMovementModal')">&times;</button></div><div class="modal-body"><form id="kitchenMovementForm"><div class="form-row"><div class="form-group"><label class="form-label">الصنف</label><select class="form-select" id="kMovItem" required></select></div><div class="form-group"><label class="form-label">النوع</label><select class="form-select" id="kMovType"><option value="in">إدخال</option><option value="out">إخراج</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">الكمية</label><input type="number" step="any" min="0" class="form-input" id="kMovQty" required></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="kMovDate"></div></div><div class="form-group"><label class="form-label">ملاحظة</label><input type="text" class="form-input" id="kMovNote"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenMovementModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenMovement()">حفظ</button></div></div></div>
@@ -902,6 +905,7 @@
             await loadTickets(); if (['gm','admin'].includes(currentUser.role)) { await loadEquipment(); }
             if (['electrical_engineer','gm','admin'].includes(currentUser.role)) { await loadProducts(); await loadSuppliers(); await loadStockMovements(); }
             if (['kitchen','gm','admin'].includes(currentUser.role)) { await loadKitchenModule(); }
+            if (['secretary','gm','admin'].includes(currentUser.role)) { await loadSecretaryModule(); }
             if (['accountant','gm','admin'].includes(currentUser.role)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
             if (['hr','gm','admin'].includes(currentUser.role)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); }
             if (['gm','admin'].includes(currentUser.role)) await loadActivityLog();
@@ -1087,6 +1091,7 @@
         document.querySelector('.nav-item[data-page="users"]').addEventListener('click', () => { if (currentUser && USERS_PAGE_ROLES.includes(currentUser.role)) loadUsersModule(); });
         document.querySelector('.nav-item[data-page="pr"]').addEventListener('click', () => { if (currentUser) loadPRModule(); });
         document.querySelector('.nav-item[data-page="kitchen"]').addEventListener('click', () => { if (currentUser) loadKitchenModule(); });
+        document.querySelector('.nav-item[data-page="secretary"]').addEventListener('click', () => { if (currentUser) loadSecretaryModule(); });
         document.querySelector('.nav-item[data-page="pm"]').addEventListener('click', () => { if (currentUser) loadPMModule(); });
         document.querySelector('.nav-item[data-page="reports"]').addEventListener('click', () => {});
         // ===================== PR Module =====================
@@ -1218,6 +1223,7 @@
                 if (typeof loadPRModule === 'function' && document.getElementById('page-pr')?.classList.contains('active')) await loadPRModule();
                 if (typeof loadPMModule === 'function' && document.getElementById('page-pm')?.classList.contains('active')) await loadPMModule();
                 if (typeof loadKitchenModule === 'function' && document.getElementById('page-kitchen')?.classList.contains('active')) await loadKitchenModule();
+                if (typeof loadSecretaryModule === 'function' && document.getElementById('page-secretary')?.classList.contains('active')) await loadSecretaryModule();
                 showToast('success', 'تم التحديث', '');
             } catch (e) { console.warn('refresh:', e); showToast('error', 'خطأ', 'تعذّر التحديث'); }
             if (btn) btn.classList.remove('spinning');
@@ -1761,6 +1767,196 @@
                 if (openTickets > 0) parts.push(`<strong>${openTickets}</strong> ${openTickets === 1 ? 'تذكرة مفتوحة' : 'تذاكر مفتوحة'}`);
             }
             host.innerHTML = `<div class="quick-glance-card"><i class="fas fa-bolt"></i><span>${parts.join(' &nbsp;&middot;&nbsp; ')}</span></div>`;
+        }
+        // ===================== Secretary: Correspondence =====================
+        let secretaryData = { correspondence: [], appointments: [] };
+        async function loadSecretaryModule() {
+            await loadSecretaryCorrespondence();
+            await loadSecretaryAppointments();
+        }
+        async function uploadSecretaryImage(file, folder) {
+            const ext = file.name.split('.').pop();
+            const path = `${folder}/${Date.now()}.${ext}`;
+            const { data, error } = await supabaseClient.storage.from('secretary-images').upload(path, file);
+            if (error) throw error;
+            return data.path;
+        }
+        async function _sSignedImg(path) {
+            if (!path) return '';
+            const isImg = /\.(jpg|jpeg|png|webp)$/i.test(path);
+            try {
+                const { data: u } = await supabaseClient.storage.from('secretary-images').createSignedUrl(path, 3600);
+                if (u && u.signedUrl) {
+                    return isImg
+                        ? `<div class="imgcap">المستند المرفق:</div><div class="imgwrap"><img src="${u.signedUrl}"></div>`
+                        : `<p class="imgcap">المرفق ملف PDF: <a href="${u.signedUrl}" target="_blank">فتح الملف</a></p>`;
+                }
+            } catch (e) { console.warn('signed url:', e); }
+            return '';
+        }
+        async function viewSecretaryImage(path) {
+            const el = document.getElementById('prImageViewContent');
+            el.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:32px;color:var(--text-muted)"></i>';
+            openModal('prImageViewModal');
+            const { data } = await supabaseClient.storage.from('secretary-images').createSignedUrl(path, 3600);
+            if (data && data.signedUrl) {
+                const isImg = /\.(jpg|jpeg|png|webp)$/i.test(path);
+                el.innerHTML = isImg ? `<img src="${data.signedUrl}" style="max-width:100%;max-height:70vh;border-radius:var(--radius-lg);">` : `<a href="${data.signedUrl}" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf"></i> فتح الملف</a>`;
+            } else { el.innerHTML = '<p style="color:var(--text-muted)">تعذّر تحميل المرفق</p>'; }
+        }
+        async function loadSecretaryCorrespondence() {
+            const { data: rows, error } = await supabaseClient.from('secretary_correspondence').select('*').order('corr_date', { ascending: false });
+            if (error) { console.warn('secretary_correspondence:', error.message); return; }
+            secretaryData.correspondence = rows || [];
+            renderSecretaryCorrespondence();
+        }
+        function renderSecretaryCorrespondence() {
+            const tbody = document.getElementById('correspondenceBody');
+            if (!tbody) return;
+            const dirAr = { incoming: 'وارد', outgoing: 'صادر' };
+            const dirBadge = { incoming: 'badge-info', outgoing: 'badge-primary' };
+            const statAr = { pending: 'تحت الإجراء', replied: 'تم الرد', closed: 'مغلق', info: 'للعلم' };
+            const statBadge = { pending: 'badge-warning', replied: 'badge-success', closed: 'badge-gray', info: 'badge-info' };
+            if (!secretaryData.correspondence.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px">${t('noData')}</td></tr>`; return; }
+            tbody.innerHTML = secretaryData.correspondence.map(c => `<tr><td>${esc(c.corr_date || '-')}</td><td style="font-family:var(--font-mono)">${esc(c.ref_number || '-')}</td><td><span class="badge ${dirBadge[c.direction] || 'badge-info'}">${dirAr[c.direction] || esc(c.direction)}</span></td><td>${esc(c.party)}</td><td>${esc(c.subject)}</td><td><span class="badge ${statBadge[c.status] || 'badge-info'}">${statAr[c.status] || esc(c.status)}</span></td><td>${c.image_path ? `<button class="btn btn-sm btn-secondary" onclick="viewSecretaryImage('${c.image_path}')"><i class="fas fa-image"></i></button>` : '<span style="color:var(--text-muted)">لا يوجد</span>'} <button class="btn btn-sm btn-secondary" onclick="printCorrespondence('${c.id}')" title="طباعة"><i class="fas fa-print"></i></button> <button class="btn btn-sm btn-secondary" onclick="editCorrespondence('${c.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteCorrespondence('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+        }
+        function openCorrespondenceModal() {
+            document.getElementById('correspondenceForm').reset();
+            document.getElementById('corrId').value = '';
+            document.getElementById('corrUploadStatus').textContent = '';
+            document.getElementById('corrDate').value = new Date().toISOString().slice(0, 10);
+            openModal('correspondenceModal');
+        }
+        function editCorrespondence(id) {
+            const c = secretaryData.correspondence.find(x => String(x.id) === String(id));
+            if (!c) return;
+            document.getElementById('corrId').value = c.id;
+            document.getElementById('corrRef').value = c.ref_number || '';
+            document.getElementById('corrDirection').value = c.direction || 'incoming';
+            document.getElementById('corrParty').value = c.party || '';
+            document.getElementById('corrDate').value = c.corr_date || '';
+            document.getElementById('corrSubject').value = c.subject || '';
+            document.getElementById('corrStatus').value = c.status || 'pending';
+            document.getElementById('corrNotes').value = c.notes || '';
+            document.getElementById('corrUploadStatus').textContent = c.image_path ? 'يوجد مرفق محفوظ (ارفع صورة جديدة لاستبداله)' : '';
+            openModal('correspondenceModal');
+        }
+        async function saveCorrespondence() {
+            const btn = document.getElementById('corrSaveBtn');
+            btn.disabled = true;
+            let imagePath = null;
+            const editId = document.getElementById('corrId').value;
+            const file = document.getElementById('corrImage').files[0];
+            if (file) {
+                try { document.getElementById('corrUploadStatus').textContent = 'جاري رفع الصورة...'; imagePath = await uploadSecretaryImage(file, 'correspondence'); document.getElementById('corrUploadStatus').textContent = '✅ تم الرفع'; }
+                catch (e) { showToast('error', 'فشل رفع الصورة', e.message); btn.disabled = false; return; }
+            }
+            if (!file && editId) { const ex = secretaryData.correspondence.find(x => String(x.id) === String(editId)); imagePath = ex ? (ex.image_path || null) : null; }
+            const payload = {
+                ref_number: document.getElementById('corrRef').value.trim() || null,
+                direction: document.getElementById('corrDirection').value,
+                party: document.getElementById('corrParty').value.trim(),
+                subject: document.getElementById('corrSubject').value.trim(),
+                corr_date: document.getElementById('corrDate').value,
+                status: document.getElementById('corrStatus').value,
+                notes: document.getElementById('corrNotes').value.trim() || null,
+                image_path: imagePath,
+                created_by: currentUser.id
+            };
+            if (!payload.party || !payload.subject || !payload.corr_date) { showToast('warning', t('fillRequired'), ''); btn.disabled = false; return; }
+            let error;
+            if (editId) { ({ error } = await supabaseClient.from('secretary_correspondence').update(payload).eq('id', editId)); }
+            else { ({ error } = await supabaseClient.from('secretary_correspondence').insert(payload)); }
+            btn.disabled = false;
+            if (error) { showToast('error', 'Error', error.message); return; }
+            closeModal('correspondenceModal');
+            showToast('success', 'تم حفظ الخطاب', '');
+            await loadSecretaryCorrespondence();
+        }
+        async function deleteCorrespondence(id) {
+            if (!confirm('حذف هذا الخطاب؟')) return;
+            const { error } = await supabaseClient.from('secretary_correspondence').delete().eq('id', id);
+            if (error) { showToast('error', 'Error', error.message); return; }
+            showToast('success', 'تم الحذف', '');
+            await loadSecretaryCorrespondence();
+        }
+        async function printCorrespondence(id) {
+            const c = secretaryData.correspondence.find(x => String(x.id) === String(id));
+            if (!c) return;
+            const company = (data.settings && data.settings.companyName) || 'شركتي';
+            const now = new Date().toLocaleDateString('ar-SA');
+            const logo = (document.querySelector('img[src^="data:image"]') || {}).src || '';
+            const dirAr = { incoming: 'وارد', outgoing: 'صادر' };
+            const statAr = { pending: 'تحت الإجراء', replied: 'تم الرد', closed: 'مغلق', info: 'للعلم' };
+            const imgHtml = await _sSignedImg(c.image_path);
+            const rows = `<tr><th>رقم الخطاب</th><td>${esc(c.ref_number || '-')}</td></tr><tr><th>النوع</th><td>${dirAr[c.direction] || esc(c.direction)}</td></tr><tr><th>الجهة</th><td>${esc(c.party)}</td></tr><tr><th>الموضوع</th><td>${esc(c.subject)}</td></tr><tr><th>التاريخ</th><td>${esc(c.corr_date)}</td></tr><tr><th>الحالة</th><td>${statAr[c.status] || esc(c.status)}</td></tr><tr><th>ملاحظات</th><td>${esc(c.notes || '-')}</td></tr>`;
+            const win = window.open('', '_blank');
+            win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>خطاب ${esc(c.ref_number || '')}</title><style>${_prPrintCSS()}</style></head><body><div class="head">${logo ? `<img src="${logo}">` : ''}<div class="co">${esc(company)}</div><div class="doc">سجل مراسلة</div></div><table>${rows}</table>${imgHtml}<div class="footer">طُبع من نظام ${esc(company)} — ${now}</div><br><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button></body></html>`);
+            win.document.close();
+        }
+        // ===================== Secretary: Appointments =====================
+        async function loadSecretaryAppointments() {
+            const { data: rows, error } = await supabaseClient.from('secretary_appointments').select('*').order('appt_date', { ascending: true }).order('appt_time', { ascending: true });
+            if (error) { console.warn('secretary_appointments:', error.message); return; }
+            secretaryData.appointments = rows || [];
+            renderSecretaryAppointments();
+        }
+        function renderSecretaryAppointments() {
+            const tbody = document.getElementById('appointmentsBody');
+            if (!tbody) return;
+            const statAr = { upcoming: 'قادم', done: 'تم', postponed: 'مؤجّل', cancelled: 'ملغى' };
+            const statBadge = { upcoming: 'badge-info', done: 'badge-success', postponed: 'badge-warning', cancelled: 'badge-danger' };
+            if (!secretaryData.appointments.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px">${t('noData')}</td></tr>`; return; }
+            tbody.innerHTML = secretaryData.appointments.map(a => `<tr><td>${esc(a.appt_date || '-')}</td><td style="font-family:var(--font-mono)">${esc(a.appt_time || '-')}</td><td>${esc(a.title)}</td><td>${esc(a.with_party || '-')}</td><td>${esc(a.location || '-')}</td><td><span class="badge ${statBadge[a.status] || 'badge-info'}">${statAr[a.status] || esc(a.status)}</span></td><td><button class="btn btn-sm btn-secondary" onclick="editAppointment('${a.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteAppointment('${a.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+        }
+        function openAppointmentModal() {
+            document.getElementById('appointmentForm').reset();
+            document.getElementById('apptId').value = '';
+            document.getElementById('apptDate').value = new Date().toISOString().slice(0, 10);
+            openModal('appointmentModal');
+        }
+        function editAppointment(id) {
+            const a = secretaryData.appointments.find(x => String(x.id) === String(id));
+            if (!a) return;
+            document.getElementById('apptId').value = a.id;
+            document.getElementById('apptTitle').value = a.title || '';
+            document.getElementById('apptWith').value = a.with_party || '';
+            document.getElementById('apptDate').value = a.appt_date || '';
+            document.getElementById('apptTime').value = a.appt_time || '';
+            document.getElementById('apptLocation').value = a.location || '';
+            document.getElementById('apptStatus').value = a.status || 'upcoming';
+            document.getElementById('apptNotes').value = a.notes || '';
+            openModal('appointmentModal');
+        }
+        async function saveAppointment() {
+            const title = document.getElementById('apptTitle').value.trim();
+            const date = document.getElementById('apptDate').value;
+            if (!title || !date) { showToast('warning', t('fillRequired'), ''); return; }
+            const payload = {
+                title: title,
+                with_party: document.getElementById('apptWith').value.trim() || null,
+                appt_date: date,
+                appt_time: document.getElementById('apptTime').value || null,
+                location: document.getElementById('apptLocation').value.trim() || null,
+                status: document.getElementById('apptStatus').value,
+                notes: document.getElementById('apptNotes').value.trim() || null,
+                created_by: currentUser.id
+            };
+            const editId = document.getElementById('apptId').value;
+            let error;
+            if (editId) { ({ error } = await supabaseClient.from('secretary_appointments').update(payload).eq('id', editId)); }
+            else { ({ error } = await supabaseClient.from('secretary_appointments').insert(payload)); }
+            if (error) { showToast('error', 'Error', error.message); return; }
+            closeModal('appointmentModal');
+            showToast('success', 'تم حفظ الموعد', '');
+            await loadSecretaryAppointments();
+        }
+        async function deleteAppointment(id) {
+            if (!confirm('حذف هذا الموعد؟')) return;
+            const { error } = await supabaseClient.from('secretary_appointments').delete().eq('id', id);
+            if (error) { showToast('error', 'Error', error.message); return; }
+            showToast('success', 'تم الحذف', '');
+            await loadSecretaryAppointments();
         }
         function openSectionGuide() {
             const activePage = document.querySelector('.page.active');
