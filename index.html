@@ -501,8 +501,8 @@
                 </div>
                 <div class="kitchen-tab-content" id="ktab-provisions"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px"><h3 style="margin:0;font-size:16px">الأصناف والمؤن</h3><button class="btn btn-primary" onclick="openKitchenItemModal()"><i class="fas fa-plus"></i> إضافة صنف</button></div><div class="table-container" style="margin-bottom:26px"><table><thead><tr><th>الصنف</th><th>الوحدة</th><th>الكمية الحالية</th><th>حد التنبيه</th><th>الإجراءات</th></tr></thead><tbody id="kitchenItemsBody"></tbody></table></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px"><h3 style="margin:0;font-size:16px">حركة المخزون</h3><button class="btn btn-primary" onclick="openKitchenMovementModal()"><i class="fas fa-exchange-alt"></i> تسجيل حركة</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الصنف</th><th>النوع</th><th>الكمية</th><th>ملاحظة</th></tr></thead><tbody id="kitchenMovementsBody"></tbody></table></div></div>
                 <div class="kitchen-tab-content" id="ktab-expenses" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px"><div><h3 style="margin:0;font-size:16px">المصروفات اليومية</h3><span id="kExpTotal" style="font-size:13px;color:var(--text-muted)"></span></div><button class="btn btn-primary" onclick="openKitchenExpenseModal()"><i class="fas fa-plus"></i> تسجيل مصروف</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفئة</th><th>المبلغ</th><th>الإجراءات</th></tr></thead><tbody id="kitchenExpensesBody"></tbody></table></div></div>
-                <div class="kitchen-tab-content" id="ktab-invoices" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
-                <div class="kitchen-tab-content" id="ktab-bank" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
+                <div class="kitchen-tab-content" id="ktab-invoices" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-primary" onclick="openKitchenInvoiceModal()"><i class="fas fa-plus"></i> إضافة فاتورة</button></div><div class="table-container"><table><thead><tr><th>رقم الفاتورة</th><th>العميل</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead><tbody id="kitchenInvoicesBody"></tbody></table></div></div>
+                <div class="kitchen-tab-content" id="ktab-bank" style="display:none"><div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-primary" onclick="openKitchenBankModal()"><i class="fas fa-plus"></i> إضافة إشعار بنكي</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>اسم البنك</th><th>النوع</th><th>المبلغ</th><th>المرجع</th><th>الإجراءات</th></tr></thead><tbody id="kitchenBankBody"></tbody></table></div></div>
             </div>
             <div class="page" id="page-pr">
                     <div class="page-header">
@@ -719,6 +719,8 @@
     <div class="modal-overlay" id="kitchenItemModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">صنف / مؤن</h3><button class="modal-close" onclick="closeModal('kitchenItemModal')">&times;</button></div><div class="modal-body"><form id="kitchenItemForm"><input type="hidden" id="kItemId"><div class="form-row"><div class="form-group"><label class="form-label">اسم الصنف</label><input type="text" class="form-input" id="kItemName" required></div><div class="form-group"><label class="form-label">الوحدة</label><input type="text" class="form-input" id="kItemUnit" placeholder="كجم / لتر / قطعة"></div></div><div class="form-row"><div class="form-group"><label class="form-label">الكمية الحالية</label><input type="number" step="any" class="form-input" id="kItemQty" value="0"></div><div class="form-group"><label class="form-label">حد التنبيه (اختياري)</label><input type="number" step="any" class="form-input" id="kItemReorder"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenItemModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenItem()">حفظ</button></div></div></div>
     <div class="modal-overlay" id="kitchenMovementModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">حركة مخزون</h3><button class="modal-close" onclick="closeModal('kitchenMovementModal')">&times;</button></div><div class="modal-body"><form id="kitchenMovementForm"><div class="form-row"><div class="form-group"><label class="form-label">الصنف</label><select class="form-select" id="kMovItem" required></select></div><div class="form-group"><label class="form-label">النوع</label><select class="form-select" id="kMovType"><option value="in">إدخال</option><option value="out">إخراج</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">الكمية</label><input type="number" step="any" min="0" class="form-input" id="kMovQty" required></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="kMovDate"></div></div><div class="form-group"><label class="form-label">ملاحظة</label><input type="text" class="form-input" id="kMovNote"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenMovementModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenMovement()">حفظ</button></div></div></div>
     <div class="modal-overlay" id="kitchenExpenseModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">مصروف يومي</h3><button class="modal-close" onclick="closeModal('kitchenExpenseModal')">&times;</button></div><div class="modal-body"><form id="kitchenExpenseForm"><input type="hidden" id="kExpId"><div class="form-row"><div class="form-group"><label class="form-label">البيان</label><input type="text" class="form-input" id="kExpDesc" required></div><div class="form-group"><label class="form-label">المبلغ</label><input type="number" step="any" min="0" class="form-input" id="kExpAmount" required></div></div><div class="form-row"><div class="form-group"><label class="form-label">الفئة</label><select class="form-select" id="kExpCategory"><option value="produce">خضار وفواكه</option><option value="meat">لحوم ودواجن</option><option value="grocery">بقالة ومؤن</option><option value="gas">غاز ووقود</option><option value="maintenance">صيانة</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="kExpDate"></div></div><div class="form-group"><label class="form-label">ملاحظة (اختياري)</label><input type="text" class="form-input" id="kExpNote"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenExpenseModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenExpense()">حفظ</button></div></div></div>
+    <div class="modal-overlay" id="kitchenInvoiceModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">فاتورة مطبخ</h3><button class="modal-close" onclick="closeModal('kitchenInvoiceModal')">&times;</button></div><div class="modal-body"><form id="kitchenInvoiceForm"><input type="hidden" id="kInvId"><div class="form-row"><div class="form-group"><label class="form-label">رقم الفاتورة</label><input type="text" class="form-input" id="kInvNumber" required></div><div class="form-group"><label class="form-label">العميل</label><input type="text" class="form-input" id="kInvClient" required></div></div><div class="form-row"><div class="form-group"><label class="form-label">المبلغ</label><input type="number" class="form-input" id="kInvAmount" min="0" step="0.01" required></div><div class="form-group"><label class="form-label">الحالة</label><select class="form-select" id="kInvStatus"><option value="pending">قيد الانتظار</option><option value="paid">مدفوعة</option><option value="overdue">متأخرة</option><option value="cancelled">ملغاة</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">تاريخ الإصدار</label><input type="date" class="form-input" id="kInvDate" required></div><div class="form-group"><label class="form-label">تاريخ الاستحقاق</label><input type="date" class="form-input" id="kInvDue"></div></div><div class="form-group"><label class="form-label">الوصف</label><textarea class="form-textarea" id="kInvDesc"></textarea></div><div class="form-group"><label class="form-label">صورة الفاتورة</label><input type="file" class="form-input" id="kInvImage" accept="image/*,application/pdf"><div id="kInvUploadStatus" style="font-size:12px;color:var(--text-secondary);margin-top:4px;"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenInvoiceModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenInvoice()" id="kInvSaveBtn">حفظ</button></div></div></div>
+    <div class="modal-overlay" id="kitchenBankModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">إشعار بنكي - مطبخ</h3><button class="modal-close" onclick="closeModal('kitchenBankModal')">&times;</button></div><div class="modal-body"><form id="kitchenBankForm"><input type="hidden" id="kBankId"><div class="form-row"><div class="form-group"><label class="form-label">اسم البنك</label><input type="text" class="form-input" id="kBankName" required></div><div class="form-group"><label class="form-label">نوع الإشعار</label><select class="form-select" id="kBankType"><option value="credit">إيداع</option><option value="debit">سحب</option><option value="transfer">تحويل</option><option value="other">أخرى</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">المبلغ</label><input type="number" class="form-input" id="kBankAmount" min="0" step="0.01"></div><div class="form-group"><label class="form-label">رقم المرجع</label><input type="text" class="form-input" id="kBankRef"></div></div><div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="kBankDate" required></div></div><div class="form-group"><label class="form-label">البيان</label><textarea class="form-textarea" id="kBankDesc"></textarea></div><div class="form-group"><label class="form-label">صورة الإشعار</label><input type="file" class="form-input" id="kBankImage" accept="image/*,application/pdf"><div id="kBankUploadStatus" style="font-size:12px;color:var(--text-secondary);margin-top:4px;"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenBankModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenBank()" id="kBankSaveBtn">حفظ</button></div></div></div>
     <!-- PR Modals -->
     <div class="modal-overlay" id="prContactModal"><div class="modal"><div class="modal-header"><h3 class="modal-title" data-i18n="addContact">إضافة جهة اتصال</h3><button class="modal-close" onclick="closeModal('prContactModal')">&times;</button></div><div class="modal-body"><form id="prContactForm"><input type="hidden" id="prContactId"><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="name">الاسم</label><input type="text" class="form-input" id="prContactName" required></div><div class="form-group"><label class="form-label" data-i18n="organization">المؤسسة</label><input type="text" class="form-input" id="prContactOrg"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="type">النوع</label><select class="form-select" id="prContactType"><option value="client">عميل</option><option value="partner">شريك</option><option value="media">وسيلة إعلام</option><option value="government">جهة حكومية</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label" data-i18n="phone">الهاتف</label><input type="text" class="form-input" id="prContactPhone"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="email">البريد الإلكتروني</label><input type="email" class="form-input" id="prContactEmail"></div><div class="form-group"><label class="form-label" data-i18n="address">العنوان</label><input type="text" class="form-input" id="prContactAddress"></div></div><div class="form-group"><label class="form-label" data-i18n="notes">ملاحظات</label><textarea class="form-textarea" id="prContactNotes"></textarea></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('prContactModal')" data-i18n="cancel">إلغاء</button><button class="btn btn-primary" onclick="savePRContact()" data-i18n="save">حفظ</button></div></div></div>
 
@@ -1209,11 +1211,13 @@
             });
         });
         // ===================== Kitchen: Provisions & Stock =====================
-        let kitchenData = { items: [], movements: [], expenses: [] };
+        let kitchenData = { items: [], movements: [], expenses: [], invoices: [], bank: [] };
         async function loadKitchenModule() {
             await loadKitchenItems();
             await loadKitchenMovements();
             await loadKitchenExpenses();
+            await loadKitchenInvoices();
+            await loadKitchenBank();
         }
         async function loadKitchenItems() {
             const { data: rows, error } = await supabaseClient.from('kitchen_items').select('*').order('name');
@@ -1389,6 +1393,217 @@
             if (error) { showToast('error', 'Error', error.message); return; }
             showToast('success', 'تم الحذف', '');
             await loadKitchenExpenses();
+        }
+        // ===================== Kitchen: Invoices + Bank Notifications =====================
+        async function uploadKitchenImage(file, folder) {
+            const ext = file.name.split('.').pop();
+            const path = `${folder}/${Date.now()}.${ext}`;
+            const { data, error } = await supabaseClient.storage.from('kitchen-images').upload(path, file);
+            if (error) throw error;
+            return data.path;
+        }
+        async function _kSignedImg(path) {
+            if (!path) return '';
+            const isImg = /\.(jpg|jpeg|png|webp)$/i.test(path);
+            try {
+                const { data: u } = await supabaseClient.storage.from('kitchen-images').createSignedUrl(path, 3600);
+                if (u && u.signedUrl) {
+                    return isImg
+                        ? `<div class="imgcap">المستند المرفق:</div><div class="imgwrap"><img src="${u.signedUrl}"></div>`
+                        : `<p class="imgcap">المرفق ملف PDF: <a href="${u.signedUrl}" target="_blank">فتح الملف</a></p>`;
+                }
+            } catch (e) { console.warn('signed url:', e); }
+            return '';
+        }
+        async function viewKitchenImage(path) {
+            const el = document.getElementById('prImageViewContent');
+            el.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:32px;color:var(--text-muted)"></i>';
+            openModal('prImageViewModal');
+            const { data } = await supabaseClient.storage.from('kitchen-images').createSignedUrl(path, 3600);
+            if (data && data.signedUrl) {
+                const isImg = /\.(jpg|jpeg|png|webp)$/i.test(path);
+                el.innerHTML = isImg ? `<img src="${data.signedUrl}" style="max-width:100%;max-height:70vh;border-radius:var(--radius-lg);">` : `<a href="${data.signedUrl}" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf"></i> فتح الملف</a>`;
+            } else { el.innerHTML = '<p style="color:var(--text-muted)">تعذّر تحميل المرفق</p>'; }
+        }
+
+        // ---------- Invoices ----------
+        async function loadKitchenInvoices() {
+            const { data: rows, error } = await supabaseClient.from('kitchen_invoices').select('*').order('date', { ascending: false });
+            if (error) { console.warn('kitchen_invoices:', error.message); return; }
+            kitchenData.invoices = rows || [];
+            renderKitchenInvoices();
+        }
+        function renderKitchenInvoices() {
+            const tbody = document.getElementById('kitchenInvoicesBody');
+            if (!tbody) return;
+            const statL = { pending: 'badge-warning', paid: 'badge-success', overdue: 'badge-danger', cancelled: 'badge-info' };
+            const statAr = { pending: 'انتظار', paid: 'مدفوعة', overdue: 'متأخرة', cancelled: 'ملغاة' };
+            if (!kitchenData.invoices || !kitchenData.invoices.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px">${t('noData')}</td></tr>`; return; }
+            tbody.innerHTML = kitchenData.invoices.map(inv => `<tr><td style="font-family:var(--font-mono)">${esc(inv.number)}</td><td>${esc(inv.client)}</td><td style="font-family:var(--font-mono)">${(parseFloat(inv.amount) || 0).toLocaleString()} ${esc(inv.currency)}</td><td><span class="badge ${statL[inv.status] || 'badge-info'}">${statAr[inv.status] || esc(inv.status)}</span></td><td>${esc(inv.date)}</td><td>${inv.image_path ? `<button class="btn btn-sm btn-secondary" onclick="viewKitchenImage('${inv.image_path}')"><i class="fas fa-image"></i></button>` : '<span style="color:var(--text-muted)">لا يوجد</span>'} <button class="btn btn-sm btn-secondary" onclick="printKitchenInvoice('${inv.id}')" title="طباعة"><i class="fas fa-print"></i></button> <button class="btn btn-sm btn-secondary" onclick="editKitchenInvoice('${inv.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteKitchenInvoice('${inv.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+        }
+        function openKitchenInvoiceModal() {
+            document.getElementById('kitchenInvoiceForm').reset();
+            document.getElementById('kInvId').value = '';
+            document.getElementById('kInvUploadStatus').textContent = '';
+            document.getElementById('kInvDate').value = new Date().toISOString().slice(0, 10);
+            openModal('kitchenInvoiceModal');
+        }
+        function editKitchenInvoice(id) {
+            const inv = kitchenData.invoices.find(x => String(x.id) === String(id));
+            if (!inv) return;
+            document.getElementById('kInvId').value = inv.id;
+            document.getElementById('kInvNumber').value = inv.number || '';
+            document.getElementById('kInvClient').value = inv.client || '';
+            document.getElementById('kInvAmount').value = inv.amount != null ? inv.amount : '';
+            document.getElementById('kInvStatus').value = inv.status || 'pending';
+            document.getElementById('kInvDate').value = inv.date || '';
+            document.getElementById('kInvDue').value = inv.due_date || '';
+            document.getElementById('kInvDesc').value = inv.description || '';
+            document.getElementById('kInvUploadStatus').textContent = inv.image_path ? 'يوجد مرفق محفوظ (ارفع صورة جديدة لاستبداله)' : '';
+            openModal('kitchenInvoiceModal');
+        }
+        async function saveKitchenInvoice() {
+            const btn = document.getElementById('kInvSaveBtn');
+            btn.disabled = true;
+            let imagePath = null;
+            const editId = document.getElementById('kInvId').value;
+            const file = document.getElementById('kInvImage').files[0];
+            if (file) {
+                try { document.getElementById('kInvUploadStatus').textContent = 'جاري رفع الصورة...'; imagePath = await uploadKitchenImage(file, 'invoices'); document.getElementById('kInvUploadStatus').textContent = '✅ تم الرفع'; }
+                catch (e) { showToast('error', 'فشل رفع الصورة', e.message); btn.disabled = false; return; }
+            }
+            if (!file && editId) { const ex = kitchenData.invoices.find(x => String(x.id) === String(editId)); imagePath = ex ? (ex.image_path || null) : null; }
+            const payload = {
+                number: document.getElementById('kInvNumber').value.trim(),
+                client: document.getElementById('kInvClient').value.trim(),
+                amount: parseFloat(document.getElementById('kInvAmount').value) || 0,
+                currency: (data.settings && data.settings.currency) || 'SDG',
+                status: document.getElementById('kInvStatus').value,
+                date: document.getElementById('kInvDate').value,
+                due_date: document.getElementById('kInvDue').value || null,
+                description: document.getElementById('kInvDesc').value.trim() || null,
+                image_path: imagePath,
+                created_by: currentUser.id
+            };
+            if (!payload.number || !payload.client || !payload.date) { showToast('warning', t('fillRequired'), ''); btn.disabled = false; return; }
+            let error;
+            if (editId) { ({ error } = await supabaseClient.from('kitchen_invoices').update(payload).eq('id', editId)); }
+            else { ({ error } = await supabaseClient.from('kitchen_invoices').insert(payload)); }
+            btn.disabled = false;
+            if (error) { showToast('error', 'Error', error.message); return; }
+            closeModal('kitchenInvoiceModal');
+            showToast('success', 'تم حفظ الفاتورة', payload.number);
+            await loadKitchenInvoices();
+        }
+        async function deleteKitchenInvoice(id) {
+            if (!confirm('حذف هذه الفاتورة؟')) return;
+            const { error } = await supabaseClient.from('kitchen_invoices').delete().eq('id', id);
+            if (error) { showToast('error', 'Error', error.message); return; }
+            showToast('success', 'تم الحذف', '');
+            await loadKitchenInvoices();
+        }
+        async function printKitchenInvoice(id) {
+            const inv = kitchenData.invoices.find(x => String(x.id) === String(id));
+            if (!inv) return;
+            const company = (data.settings && data.settings.companyName) || 'شركتي';
+            const now = new Date().toLocaleDateString('ar-SA');
+            const logo = (document.querySelector('img[src^="data:image"]') || {}).src || '';
+            const statAr = { pending: 'انتظار', paid: 'مدفوعة', overdue: 'متأخرة', cancelled: 'ملغاة' };
+            const imgHtml = await _kSignedImg(inv.image_path);
+            const amount = (parseFloat(inv.amount) || 0).toLocaleString();
+            const rows = `<tr><th>رقم الفاتورة</th><td>${esc(inv.number)}</td></tr><tr><th>العميل</th><td>${esc(inv.client)}</td></tr><tr><th>المبلغ</th><td>${amount} ${esc(inv.currency)}</td></tr><tr><th>الحالة</th><td>${statAr[inv.status] || esc(inv.status)}</td></tr><tr><th>التاريخ</th><td>${esc(inv.date)}</td></tr><tr><th>تاريخ الاستحقاق</th><td>${esc(inv.due_date || '-')}</td></tr><tr><th>الوصف</th><td>${esc(inv.description || '-')}</td></tr>`;
+            const win = window.open('', '_blank');
+            win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${esc(inv.number)}</title><style>${_prPrintCSS()}</style></head><body><div class="head">${logo ? `<img src="${logo}">` : ''}<div class="co">${esc(company)}</div><div class="doc">فاتورة مطبخ</div></div><table>${rows}</table>${imgHtml}<div class="footer">طُبع من نظام ${esc(company)} — ${now}</div><br><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button></body></html>`);
+            win.document.close();
+        }
+
+        // ---------- Bank Notifications ----------
+        async function loadKitchenBank() {
+            const { data: rows, error } = await supabaseClient.from('kitchen_bank_notifications').select('*').order('date', { ascending: false });
+            if (error) { console.warn('kitchen_bank_notifications:', error.message); return; }
+            kitchenData.bank = rows || [];
+            renderKitchenBank();
+        }
+        function renderKitchenBank() {
+            const tbody = document.getElementById('kitchenBankBody');
+            if (!tbody) return;
+            const typeAr = { credit: 'إيداع', debit: 'سحب', transfer: 'تحويل', other: 'أخرى' };
+            const typeBadge = { credit: 'badge-success', debit: 'badge-danger', transfer: 'badge-primary', other: 'badge-info' };
+            if (!kitchenData.bank || !kitchenData.bank.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px">${t('noData')}</td></tr>`; return; }
+            tbody.innerHTML = kitchenData.bank.map(b => `<tr><td>${esc(b.date)}</td><td>${esc(b.bank_name)}</td><td><span class="badge ${typeBadge[b.notification_type] || 'badge-info'}">${typeAr[b.notification_type] || esc(b.notification_type)}</span></td><td style="font-family:var(--font-mono)">${b.amount ? (parseFloat(b.amount) || 0).toLocaleString() + ' ' + esc(b.currency) : '-'}</td><td>${esc(b.reference || '-')}</td><td>${b.image_path ? `<button class="btn btn-sm btn-secondary" onclick="viewKitchenImage('${b.image_path}')"><i class="fas fa-image"></i></button>` : '<span style="color:var(--text-muted)">لا يوجد</span>'} <button class="btn btn-sm btn-secondary" onclick="printKitchenBank('${b.id}')" title="طباعة"><i class="fas fa-print"></i></button> <button class="btn btn-sm btn-secondary" onclick="editKitchenBank('${b.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteKitchenBank('${b.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+        }
+        function openKitchenBankModal() {
+            document.getElementById('kitchenBankForm').reset();
+            document.getElementById('kBankId').value = '';
+            document.getElementById('kBankUploadStatus').textContent = '';
+            document.getElementById('kBankDate').value = new Date().toISOString().slice(0, 10);
+            openModal('kitchenBankModal');
+        }
+        function editKitchenBank(id) {
+            const b = kitchenData.bank.find(x => String(x.id) === String(id));
+            if (!b) return;
+            document.getElementById('kBankId').value = b.id;
+            document.getElementById('kBankName').value = b.bank_name || '';
+            document.getElementById('kBankType').value = b.notification_type || 'credit';
+            document.getElementById('kBankAmount').value = b.amount != null ? b.amount : '';
+            document.getElementById('kBankRef').value = b.reference || '';
+            document.getElementById('kBankDate').value = b.date || '';
+            document.getElementById('kBankDesc').value = b.description || '';
+            document.getElementById('kBankUploadStatus').textContent = b.image_path ? 'يوجد مرفق محفوظ (ارفع صورة جديدة لاستبداله)' : '';
+            openModal('kitchenBankModal');
+        }
+        async function saveKitchenBank() {
+            const btn = document.getElementById('kBankSaveBtn');
+            btn.disabled = true;
+            let imagePath = null;
+            const editId = document.getElementById('kBankId').value;
+            const file = document.getElementById('kBankImage').files[0];
+            if (file) {
+                try { document.getElementById('kBankUploadStatus').textContent = 'جاري رفع الصورة...'; imagePath = await uploadKitchenImage(file, 'bank'); document.getElementById('kBankUploadStatus').textContent = '✅ تم الرفع'; }
+                catch (e) { showToast('error', 'فشل رفع الصورة', e.message); btn.disabled = false; return; }
+            }
+            if (!file && editId) { const ex = kitchenData.bank.find(x => String(x.id) === String(editId)); imagePath = ex ? (ex.image_path || null) : null; }
+            const payload = {
+                bank_name: document.getElementById('kBankName').value.trim(),
+                notification_type: document.getElementById('kBankType').value,
+                amount: parseFloat(document.getElementById('kBankAmount').value) || null,
+                currency: (data.settings && data.settings.currency) || 'SDG',
+                reference: document.getElementById('kBankRef').value.trim() || null,
+                date: document.getElementById('kBankDate').value,
+                description: document.getElementById('kBankDesc').value.trim() || null,
+                image_path: imagePath,
+                created_by: currentUser.id
+            };
+            if (!payload.bank_name || !payload.date) { showToast('warning', t('fillRequired'), ''); btn.disabled = false; return; }
+            let error;
+            if (editId) { ({ error } = await supabaseClient.from('kitchen_bank_notifications').update(payload).eq('id', editId)); }
+            else { ({ error } = await supabaseClient.from('kitchen_bank_notifications').insert(payload)); }
+            btn.disabled = false;
+            if (error) { showToast('error', 'Error', error.message); return; }
+            closeModal('kitchenBankModal');
+            showToast('success', 'تم حفظ الإشعار', '');
+            await loadKitchenBank();
+        }
+        async function deleteKitchenBank(id) {
+            if (!confirm('حذف هذا الإشعار؟')) return;
+            const { error } = await supabaseClient.from('kitchen_bank_notifications').delete().eq('id', id);
+            if (error) { showToast('error', 'Error', error.message); return; }
+            showToast('success', 'تم الحذف', '');
+            await loadKitchenBank();
+        }
+        async function printKitchenBank(id) {
+            const b = kitchenData.bank.find(x => String(x.id) === String(id));
+            if (!b) return;
+            const company = (data.settings && data.settings.companyName) || 'شركتي';
+            const now = new Date().toLocaleDateString('ar-SA');
+            const logo = (document.querySelector('img[src^="data:image"]') || {}).src || '';
+            const typeAr = { credit: 'إيداع', debit: 'سحب', transfer: 'تحويل', other: 'أخرى' };
+            const imgHtml = await _kSignedImg(b.image_path);
+            const amount = b.amount ? (parseFloat(b.amount) || 0).toLocaleString() + ' ' + esc(b.currency) : '-';
+            const rows = `<tr><th>التاريخ</th><td>${esc(b.date)}</td></tr><tr><th>اسم البنك</th><td>${esc(b.bank_name)}</td></tr><tr><th>النوع</th><td>${typeAr[b.notification_type] || esc(b.notification_type)}</td></tr><tr><th>المبلغ</th><td>${amount}</td></tr><tr><th>المرجع</th><td>${esc(b.reference || '-')}</td></tr><tr><th>الوصف</th><td>${esc(b.description || '-')}</td></tr>`;
+            const win = window.open('', '_blank');
+            win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>إشعار بنكي</title><style>${_prPrintCSS()}</style></head><body><div class="head">${logo ? `<img src="${logo}">` : ''}<div class="co">${esc(company)}</div><div class="doc">إشعار بنكي - مطبخ</div></div><table>${rows}</table>${imgHtml}<div class="footer">طُبع من نظام ${esc(company)} — ${now}</div><br><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button></body></html>`);
+            win.document.close();
         }
         function openSectionGuide() {
             const activePage = document.querySelector('.page.active');
