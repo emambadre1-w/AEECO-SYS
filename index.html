@@ -343,6 +343,10 @@
     <style>
     /* ====== AEECO — لمسات بصرية إضافية (CSS فقط، بدون أي منطق) ====== */
 
+    /* لوجو الشركة خلفية خفيفة جدًا (يظهر في فراغات الخلفية فقط، خلف المحتوى) */
+    #aeecoWatermark { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .05; background-repeat: no-repeat; background-position: center center; background-size: min(52vw, 500px); }
+    .main-content { position: relative; z-index: 1; }
+
     /* أزرار: ارتفاع خفيف وظل عند المرور */
     .btn { transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
     .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
@@ -417,6 +421,7 @@
         </div>
     </div>
     <div class="app-container app-hidden" id="appContainer">
+        <div id="aeecoWatermark" aria-hidden="true"></div>
         <!-- Notification Panel -->
         <div class="notif-panel hidden" id="notifPanel">
             <div class="notif-panel-header">
@@ -875,7 +880,7 @@
             await loadRequestsModule();
             if (USERS_PAGE_ROLES.includes(currentUser.role)) await loadUsersModule();
             await loadNotifications();
-            initRealtime();
+            initRealtime(); applyWatermark();
             await renderRoleDashboard();
             // التوجيه للصفحة الافتراضية حسب الدور
             let _target = ROLE_DEFAULT_PAGE[currentUser.role] || 'requests';
@@ -1655,6 +1660,13 @@
             const win = window.open('', '_blank');
             win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>إشعار بنكي</title><style>${_prPrintCSS()}</style></head><body><div class="head">${logo ? `<img src="${logo}">` : ''}<div class="co">${esc(company)}</div><div class="doc">إشعار بنكي - مطبخ</div></div><table>${rows}</table>${imgHtml}<div class="footer">طُبع من نظام ${esc(company)} — ${now}</div><br><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button></body></html>`);
             win.document.close();
+        }
+        function applyWatermark() {
+            try {
+                var logo = document.querySelector('.auth-bg-logo') || document.querySelector('img[src^="data:image"]');
+                var wm = document.getElementById('aeecoWatermark');
+                if (logo && wm && logo.src) wm.style.backgroundImage = 'url(' + logo.src + ')';
+            } catch (e) { console.warn('watermark:', e); }
         }
         function openSectionGuide() {
             const activePage = document.querySelector('.page.active');
