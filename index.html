@@ -499,7 +499,7 @@
                     <button class="tab" data-ktab="invoices" data-i18n="kInvoices">الفواتير</button>
                     <button class="tab" data-ktab="bank" data-i18n="kBank">الإشعارات البنكية</button>
                 </div>
-                <div class="kitchen-tab-content" id="ktab-provisions"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
+                <div class="kitchen-tab-content" id="ktab-provisions"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px"><h3 style="margin:0;font-size:16px">الأصناف والمؤن</h3><button class="btn btn-primary" onclick="openKitchenItemModal()"><i class="fas fa-plus"></i> إضافة صنف</button></div><div class="table-container" style="margin-bottom:26px"><table><thead><tr><th>الصنف</th><th>الوحدة</th><th>الكمية الحالية</th><th>حد التنبيه</th><th>الإجراءات</th></tr></thead><tbody id="kitchenItemsBody"></tbody></table></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px"><h3 style="margin:0;font-size:16px">حركة المخزون</h3><button class="btn btn-primary" onclick="openKitchenMovementModal()"><i class="fas fa-exchange-alt"></i> تسجيل حركة</button></div><div class="table-container"><table><thead><tr><th>التاريخ</th><th>الصنف</th><th>النوع</th><th>الكمية</th><th>ملاحظة</th></tr></thead><tbody id="kitchenMovementsBody"></tbody></table></div></div>
                 <div class="kitchen-tab-content" id="ktab-expenses" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
                 <div class="kitchen-tab-content" id="ktab-invoices" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
                 <div class="kitchen-tab-content" id="ktab-bank" style="display:none"><div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px">قيد الإعداد…</p></div></div>
@@ -715,6 +715,9 @@
         </div>
     </div>
     <div class="modal-overlay" id="newRequestModal"><div class="modal"><div class="modal-header"><h3 class="modal-title" data-i18n="newRequest">طلب جديد</h3><button class="modal-close" onclick="closeModal('newRequestModal')">&times;</button></div><div class="modal-body"><form id="newRequestForm"><div class="form-group"><label class="form-label" data-i18n="requestType">نوع الطلب</label><select class="form-select" id="reqType" required onchange="toggleAmountField()"><option value="leave" data-i18n="reqTypeLeave">إجازة</option><option value="expense" data-i18n="reqTypeExpense">سلفة / مصروف مالي</option><option value="purchase" data-i18n="reqTypePurchase">شراء مستلزمات / معدات</option><option value="maintenance" data-i18n="reqTypeMaintenance">صيانة / دعم تقني</option><option value="general" data-i18n="reqTypeGeneral">طلب عام آخر</option></select></div><div class="form-group"><label class="form-label" data-i18n="title">العنوان</label><input type="text" class="form-input" id="reqTitle" required></div><div class="form-group"><label class="form-label" data-i18n="description">التفاصيل</label><textarea class="form-textarea" id="reqDescription" required></textarea></div><div class="form-group app-hidden" id="reqAmountGroup"><label class="form-label" data-i18n="amount">المبلغ</label><input type="number" class="form-input" id="reqAmount" min="0" step="0.01"></div><div class="form-group"><label class="form-label" data-i18n="approvalPath">مسار الموافقة</label><div class="stage-track" id="reqStagePreview"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('newRequestModal')" data-i18n="cancel">إلغاء</button><button class="btn btn-primary" onclick="submitNewRequest()" id="reqSubmitBtn" data-i18n="submitRequest">إرسال الطلب</button></div></div></div>
+    <!-- Kitchen Modals -->
+    <div class="modal-overlay" id="kitchenItemModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">صنف / مؤن</h3><button class="modal-close" onclick="closeModal('kitchenItemModal')">&times;</button></div><div class="modal-body"><form id="kitchenItemForm"><input type="hidden" id="kItemId"><div class="form-row"><div class="form-group"><label class="form-label">اسم الصنف</label><input type="text" class="form-input" id="kItemName" required></div><div class="form-group"><label class="form-label">الوحدة</label><input type="text" class="form-input" id="kItemUnit" placeholder="كجم / لتر / قطعة"></div></div><div class="form-row"><div class="form-group"><label class="form-label">الكمية الحالية</label><input type="number" step="any" class="form-input" id="kItemQty" value="0"></div><div class="form-group"><label class="form-label">حد التنبيه (اختياري)</label><input type="number" step="any" class="form-input" id="kItemReorder"></div></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenItemModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenItem()">حفظ</button></div></div></div>
+    <div class="modal-overlay" id="kitchenMovementModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">حركة مخزون</h3><button class="modal-close" onclick="closeModal('kitchenMovementModal')">&times;</button></div><div class="modal-body"><form id="kitchenMovementForm"><div class="form-row"><div class="form-group"><label class="form-label">الصنف</label><select class="form-select" id="kMovItem" required></select></div><div class="form-group"><label class="form-label">النوع</label><select class="form-select" id="kMovType"><option value="in">إدخال</option><option value="out">إخراج</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">الكمية</label><input type="number" step="any" min="0" class="form-input" id="kMovQty" required></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" class="form-input" id="kMovDate"></div></div><div class="form-group"><label class="form-label">ملاحظة</label><input type="text" class="form-input" id="kMovNote"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('kitchenMovementModal')">إلغاء</button><button class="btn btn-primary" onclick="saveKitchenMovement()">حفظ</button></div></div></div>
     <!-- PR Modals -->
     <div class="modal-overlay" id="prContactModal"><div class="modal"><div class="modal-header"><h3 class="modal-title" data-i18n="addContact">إضافة جهة اتصال</h3><button class="modal-close" onclick="closeModal('prContactModal')">&times;</button></div><div class="modal-body"><form id="prContactForm"><input type="hidden" id="prContactId"><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="name">الاسم</label><input type="text" class="form-input" id="prContactName" required></div><div class="form-group"><label class="form-label" data-i18n="organization">المؤسسة</label><input type="text" class="form-input" id="prContactOrg"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="type">النوع</label><select class="form-select" id="prContactType"><option value="client">عميل</option><option value="partner">شريك</option><option value="media">وسيلة إعلام</option><option value="government">جهة حكومية</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label" data-i18n="phone">الهاتف</label><input type="text" class="form-input" id="prContactPhone"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="email">البريد الإلكتروني</label><input type="email" class="form-input" id="prContactEmail"></div><div class="form-group"><label class="form-label" data-i18n="address">العنوان</label><input type="text" class="form-input" id="prContactAddress"></div></div><div class="form-group"><label class="form-label" data-i18n="notes">ملاحظات</label><textarea class="form-textarea" id="prContactNotes"></textarea></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('prContactModal')" data-i18n="cancel">إلغاء</button><button class="btn btn-primary" onclick="savePRContact()" data-i18n="save">حفظ</button></div></div></div>
 
@@ -814,6 +817,7 @@
             initApp();
             if (['gm','admin'].includes(currentUser.role)) { await loadTickets(); await loadEquipment(); }
             if (['electrical_engineer','gm','admin'].includes(currentUser.role)) { await loadProducts(); await loadSuppliers(); await loadStockMovements(); }
+            if (['kitchen','gm','admin'].includes(currentUser.role)) { await loadKitchenModule(); }
             if (['accountant','gm','admin'].includes(currentUser.role)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
             if (['hr','gm','admin'].includes(currentUser.role)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); }
             if (['gm','admin'].includes(currentUser.role)) await loadActivityLog();
@@ -823,7 +827,9 @@
             initRealtime();
             await renderRoleDashboard();
             // التوجيه للصفحة الافتراضية حسب الدور
-            navigateTo(ROLE_DEFAULT_PAGE[currentUser.role] || 'requests');
+            let _target = ROLE_DEFAULT_PAGE[currentUser.role] || 'requests';
+            try { const _saved = localStorage.getItem('aeeco_last_page'); if (_saved && (ROLE_PAGES[currentUser.role] || []).includes(_saved)) _target = _saved; } catch (e) {}
+            navigateTo(_target);
         }
         function applyRoleVisibility() {
             const allowed = ROLE_PAGES[currentUser.role] || ['requests'];
@@ -992,6 +998,7 @@
         document.querySelector('.nav-item[data-page="dashboard"]').addEventListener('click', () => { if (currentUser) renderRoleDashboard(); });
         document.querySelector('.nav-item[data-page="users"]').addEventListener('click', () => { if (currentUser && USERS_PAGE_ROLES.includes(currentUser.role)) loadUsersModule(); });
         document.querySelector('.nav-item[data-page="pr"]').addEventListener('click', () => { if (currentUser) loadPRModule(); });
+        document.querySelector('.nav-item[data-page="kitchen"]').addEventListener('click', () => { if (currentUser) loadKitchenModule(); });
         document.querySelector('.nav-item[data-page="pm"]').addEventListener('click', () => { if (currentUser) loadPMModule(); });
         document.querySelector('.nav-item[data-page="reports"]').addEventListener('click', () => {});
         // ===================== PR Module =====================
@@ -1122,6 +1129,7 @@
                 if (typeof loadNotifications === 'function') await loadNotifications();
                 if (typeof loadPRModule === 'function' && document.getElementById('page-pr')?.classList.contains('active')) await loadPRModule();
                 if (typeof loadPMModule === 'function' && document.getElementById('page-pm')?.classList.contains('active')) await loadPMModule();
+                if (typeof loadKitchenModule === 'function' && document.getElementById('page-kitchen')?.classList.contains('active')) await loadKitchenModule();
                 showToast('success', 'تم التحديث', '');
             } catch (e) { console.warn('refresh:', e); showToast('error', 'خطأ', 'تعذّر التحديث'); }
             if (btn) btn.classList.remove('spinning');
@@ -1199,6 +1207,119 @@
                 document.getElementById(`ktab-${activeKitchenTab}`).style.display = 'block';
             });
         });
+        // ===================== Kitchen: Provisions & Stock =====================
+        let kitchenData = { items: [], movements: [] };
+        async function loadKitchenModule() {
+            await loadKitchenItems();
+            await loadKitchenMovements();
+        }
+        async function loadKitchenItems() {
+            const { data: rows, error } = await supabaseClient.from('kitchen_items').select('*').order('name');
+            if (error) { console.warn('kitchen_items:', error.message); return; }
+            kitchenData.items = rows || [];
+            renderKitchenItems();
+        }
+        async function loadKitchenMovements() {
+            const { data: rows, error } = await supabaseClient.from('kitchen_stock_movements').select('*').order('created_at', { ascending: false });
+            if (error) { console.warn('kitchen_stock_movements:', error.message); return; }
+            kitchenData.movements = rows || [];
+            renderKitchenMovements();
+        }
+        function renderKitchenItems() {
+            const tbody = document.getElementById('kitchenItemsBody');
+            if (!tbody) return;
+            if (!kitchenData.items.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px">${t('noData')}</td></tr>`; return; }
+            tbody.innerHTML = kitchenData.items.map(it => {
+                const low = it.reorder_level != null && parseFloat(it.quantity || 0) <= parseFloat(it.reorder_level);
+                return `<tr><td>${esc(it.name)}</td><td>${esc(it.unit || '-')}</td><td style="font-family:var(--font-mono)">${parseFloat(it.quantity || 0).toLocaleString()}${low ? ' <span class="badge badge-danger">منخفض</span>' : ''}</td><td>${it.reorder_level != null ? esc(it.reorder_level) : '-'}</td><td><button class="btn btn-sm btn-secondary" onclick="editKitchenItem('${it.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteKitchenItem('${it.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+            }).join('');
+        }
+        function renderKitchenMovements() {
+            const tbody = document.getElementById('kitchenMovementsBody');
+            if (!tbody) return;
+            if (!kitchenData.movements.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px">${t('noData')}</td></tr>`; return; }
+            const nameById = {};
+            kitchenData.items.forEach(i => { nameById[i.id] = i.name; });
+            tbody.innerHTML = kitchenData.movements.map(m => {
+                const badge = m.movement_type === 'in' ? '<span class="badge badge-success">إدخال</span>' : '<span class="badge badge-danger">إخراج</span>';
+                return `<tr><td>${esc(m.movement_date || '-')}</td><td>${esc(nameById[m.item_id] || '-')}</td><td>${badge}</td><td style="font-family:var(--font-mono)">${parseFloat(m.quantity || 0).toLocaleString()}</td><td>${esc(m.note || '-')}</td></tr>`;
+            }).join('');
+        }
+        function openKitchenItemModal() {
+            document.getElementById('kitchenItemForm').reset();
+            document.getElementById('kItemId').value = '';
+            document.getElementById('kItemQty').value = '0';
+            openModal('kitchenItemModal');
+        }
+        function editKitchenItem(id) {
+            const it = kitchenData.items.find(x => String(x.id) === String(id));
+            if (!it) return;
+            document.getElementById('kItemId').value = it.id;
+            document.getElementById('kItemName').value = it.name || '';
+            document.getElementById('kItemUnit').value = it.unit || '';
+            document.getElementById('kItemQty').value = it.quantity != null ? it.quantity : 0;
+            document.getElementById('kItemReorder').value = it.reorder_level != null ? it.reorder_level : '';
+            openModal('kitchenItemModal');
+        }
+        async function saveKitchenItem() {
+            const name = document.getElementById('kItemName').value.trim();
+            if (!name) { showToast('warning', t('fillRequired'), ''); return; }
+            const rl = document.getElementById('kItemReorder').value;
+            const payload = {
+                name: name,
+                unit: document.getElementById('kItemUnit').value.trim() || null,
+                quantity: parseFloat(document.getElementById('kItemQty').value) || 0,
+                reorder_level: rl !== '' ? parseFloat(rl) : null,
+                created_by: currentUser.id
+            };
+            const editId = document.getElementById('kItemId').value;
+            let error;
+            if (editId) { ({ error } = await supabaseClient.from('kitchen_items').update(payload).eq('id', editId)); }
+            else { ({ error } = await supabaseClient.from('kitchen_items').insert(payload)); }
+            if (error) { showToast('error', 'Error', error.message); return; }
+            showToast('success', 'تم الحفظ', '');
+            closeModal('kitchenItemModal');
+            await loadKitchenItems();
+        }
+        async function deleteKitchenItem(id) {
+            if (!confirm('حذف هذا الصنف؟ (لن تتأثر سجلات الحركة السابقة)')) return;
+            const { error } = await supabaseClient.from('kitchen_items').delete().eq('id', id);
+            if (error) { showToast('error', 'Error', error.message); return; }
+            showToast('success', 'تم الحذف', '');
+            await loadKitchenItems();
+        }
+        function openKitchenMovementModal() {
+            if (!kitchenData.items.length) { showToast('warning', 'أضف صنفًا أولًا', ''); return; }
+            document.getElementById('kitchenMovementForm').reset();
+            document.getElementById('kMovItem').innerHTML = kitchenData.items.map(i => `<option value="${i.id}">${esc(i.name)}</option>`).join('');
+            document.getElementById('kMovDate').value = new Date().toISOString().slice(0, 10);
+            openModal('kitchenMovementModal');
+        }
+        async function saveKitchenMovement() {
+            const itemId = document.getElementById('kMovItem').value;
+            const type = document.getElementById('kMovType').value;
+            const qty = parseFloat(document.getElementById('kMovQty').value);
+            if (!itemId || !(qty > 0)) { showToast('warning', t('fillRequired'), ''); return; }
+            const payload = {
+                item_id: itemId,
+                movement_type: type,
+                quantity: qty,
+                note: document.getElementById('kMovNote').value.trim() || null,
+                movement_date: document.getElementById('kMovDate').value || new Date().toISOString().slice(0, 10),
+                created_by: currentUser.id
+            };
+            const { error } = await supabaseClient.from('kitchen_stock_movements').insert(payload);
+            if (error) { showToast('error', 'Error', error.message); return; }
+            const it = kitchenData.items.find(x => String(x.id) === String(itemId));
+            if (it) {
+                const newQty = (parseFloat(it.quantity) || 0) + (type === 'in' ? qty : -qty);
+                await supabaseClient.from('kitchen_items').update({ quantity: newQty }).eq('id', itemId);
+            }
+            showToast('success', 'تم الحفظ', '');
+            closeModal('kitchenMovementModal');
+            await loadKitchenItems();
+            await loadKitchenMovements();
+        }
         function openSectionGuide() {
             const activePage = document.querySelector('.page.active');
             const key = activePage ? activePage.id.replace('page-', '') : 'dashboard';
@@ -1223,6 +1344,7 @@
             const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
             if (pageEl) pageEl.classList.add('active');
             if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard();
+            try { localStorage.setItem('aeeco_last_page', page); } catch (e) {}
             document.getElementById('sidebar').classList.remove('open');
         }
         function renderReportsDashboard() {
