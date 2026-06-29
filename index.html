@@ -256,8 +256,12 @@
         .auth-emblem { height: 56px; width: auto; display: block; margin: 0 auto 14px; }
         .auth-brand { font-family: 'Cairo','IBM Plex Sans Arabic',sans-serif; font-weight: 800; font-size: 32px; letter-spacing: 2px; line-height: 1; }
         .auth-brand-sys { color: #3A3A3A; margin-right: 8px; }
-        .auth-card .form-input { border: none; border-bottom: 1px solid var(--border-color); border-radius: 0; background: transparent; padding: 8px 2px; transition: border-color .2s; }
-        .auth-card .form-input:focus { border-bottom-color: var(--primary); box-shadow: none; outline: none; }
+        .auth-card .form-input { border: 1.5px solid var(--border-color); border-radius: 12px; background: #fafbfc; padding: 12px 14px; transition: border-color .2s, box-shadow .2s, background .2s; }
+        .auth-card .form-input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(11,110,79,0.12); outline: none; }
+        .auth-card .input-icon-wrap { position: relative; }
+        .auth-card .input-icon-wrap .form-input { padding-right: 42px; }
+        .auth-card .input-icon-wrap .input-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #9aa0a6; font-size: 15px; pointer-events: none; transition: color .2s; }
+        .auth-card .input-icon-wrap:focus-within .input-icon { color: var(--primary); }
         .auth-card .form-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); letter-spacing: .3px; }
         .auth-card .btn-primary { border-radius: 26px; padding: 13px 24px; }
         .auth-switch a { color: var(--primary); cursor: pointer; font-weight: 600; }
@@ -438,8 +442,8 @@
             
             <div class="auth-error" id="authError"></div>
             <form id="loginForm">
-                <div class="form-group"><label class="form-label" data-i18n="email">البريد الإلكتروني</label><input type="email" class="form-input" id="loginEmail" required></div>
-                <div class="form-group"><label class="form-label" data-i18n="password">كلمة المرور</label><input type="password" class="form-input" id="loginPassword" required></div>
+                <div class="form-group"><label class="form-label" data-i18n="email">البريد الإلكتروني</label><div class="input-icon-wrap"><i class="fas fa-envelope input-icon"></i><input type="email" class="form-input" id="loginEmail" required></div></div>
+                <div class="form-group"><label class="form-label" data-i18n="password">كلمة المرور</label><div class="input-icon-wrap"><i class="fas fa-lock input-icon"></i><input type="password" class="form-input" id="loginPassword" required></div></div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginSubmitBtn"><span data-i18n="login">دخول</span></button><div style="text-align:center;margin-top:12px"><a id="forgotPasswordLink" style="cursor:pointer;color:var(--primary);font-size:13px" data-i18n="forgotPassword">نسيت كلمة المرور؟</a></div>
             </form>
             <form id="resetForm" style="display:none">
