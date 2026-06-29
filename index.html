@@ -973,7 +973,7 @@
             // Quick actions: admin only
             const qa = document.getElementById('quickActionsCard');
             if (qa) qa.style.display = currentUser.role === 'admin' ? 'block' : 'none';
-            const _canMgrTickets = ['gm','admin'].includes(currentUser.role);
+            const _canMgrTickets = ['gm','admin','it_support'].includes(currentUser.role);
             const _eqTab = document.querySelector('.tab[data-tab="equipment"]'); if (_eqTab) _eqTab.classList.toggle('app-hidden', !_canMgrTickets);
             const _stSel = document.getElementById('ticketStatus'); if (_stSel && _stSel.closest('.form-group')) _stSel.closest('.form-group').style.display = _canMgrTickets ? '' : 'none';
         }
