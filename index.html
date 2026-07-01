@@ -832,6 +832,23 @@
                         #page-execdash .exd-ph-box span{font-size:13px}
                         #page-execdash .exd-chart-box{position:relative;height:270px}
                         #page-execdash .exd-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:13px;text-align:center}
+                        #page-execdash .exd-list{display:flex;flex-direction:column}
+                        #page-execdash .exd-li{display:flex;align-items:center;gap:12px;padding:11px 8px;border-radius:9px;transition:background .12s}
+                        #page-execdash .exd-li + .exd-li{border-top:1px solid #F1F5F9}
+                        #page-execdash .exd-li-click{cursor:pointer}
+                        #page-execdash .exd-li-click:hover{background:#F8FAFC}
+                        #page-execdash .exd-li-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+                        #page-execdash .exd-li-ic.act-create{background:rgba(34,197,94,.12);color:#16A34A}
+                        #page-execdash .exd-li-ic.act-delete{background:rgba(239,68,68,.12);color:#EF4444}
+                        #page-execdash .exd-li-ic.act-update{background:rgba(29,57,255,.12);color:#1D39FF}
+                        #page-execdash .exd-li-ic.pend{background:rgba(245,158,11,.14);color:#D97706}
+                        #page-execdash .exd-li-main{flex:1;min-width:0}
+                        #page-execdash .exd-li-t{font-size:13px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+                        #page-execdash .exd-li-s{font-size:12px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+                        #page-execdash .exd-li-time{font-size:11px;color:#94A3B8;flex-shrink:0}
+                        #page-execdash .exd-li-right{text-align:left;flex-shrink:0}
+                        #page-execdash .exd-li-amt{font-size:13px;font-weight:700;color:#0B6E4F}
+                        #page-execdash .exd-li-empty{padding:38px 0;text-align:center;color:#94A3B8;font-size:13px}
                         @media(max-width:1100px){#page-execdash .exd-kpis{grid-template-columns:repeat(2,1fr)}#page-execdash .exd-grid.g2{grid-template-columns:1fr}}
                         @media(max-width:560px){#page-execdash .exd-kpis{grid-template-columns:1fr}}
                     </style>
@@ -858,8 +875,8 @@
                     </div>
 
                     <div class="exd-grid g2">
-                        <div class="exd-card"><div class="ch">آخر الأنشطة</div><div class="cb"><div class="exd-ph-box" style="height:170px"><i class="fas fa-list-ul"></i><span>تُعرض آخر العمليات هنا</span></div></div></div>
-                        <div class="exd-card"><div class="ch">الموافقات المعلّقة</div><div class="cb"><div class="exd-ph-box" style="height:170px"><i class="fas fa-hourglass-half"></i><span>تُعرض الطلبات المنتظرة هنا</span></div></div></div>
+                        <div class="exd-card"><div class="ch">آخر الأنشطة</div><div class="cb"><div id="exdActivityList" class="exd-list"></div></div></div>
+                        <div class="exd-card"><div class="ch">الموافقات المعلّقة</div><div class="cb"><div id="exdPendingList" class="exd-list"></div></div></div>
                     </div>
                 </div>
 
@@ -2550,6 +2567,53 @@
             else v=Math.round(n).toLocaleString();
             return v+' '+sym;
         }
+        function _exdReqName(id){
+            try{ var p=(typeof profilesCache!=='undefined'&&profilesCache)?profilesCache[id]:null; if(p&&p.full_name) return p.full_name; }catch(e){}
+            return '—';
+        }
+        function renderExecLists(){
+            try{
+                // ===== آخر الأنشطة =====
+                var actEl = document.getElementById('exdActivityList');
+                if(actEl){
+                    var acts = (data.activityLog||[]).slice().sort(function(a,b){ return String(b.timestamp||'').localeCompare(String(a.timestamp||'')); }).slice(0,6);
+                    if(acts.length===0){
+                        actEl.innerHTML = '<div class="exd-li-empty">لا توجد أنشطة بعد</div>';
+                    } else {
+                        actEl.innerHTML = acts.map(function(a){
+                            var cls = a.action==='create'?'create':a.action==='delete'?'delete':'update';
+                            var ic  = a.action==='create'?'fa-plus':a.action==='delete'?'fa-trash':'fa-pen';
+                            var when = a.timestamp?formatDateTime(a.timestamp):'';
+                            return '<div class="exd-li"><div class="exd-li-ic act-'+cls+'"><i class="fas '+ic+'"></i></div>'+
+                                '<div class="exd-li-main"><div class="exd-li-t">'+esc(a.itemName||'—')+'</div>'+
+                                '<div class="exd-li-s">'+esc(a.actor||'')+'</div></div>'+
+                                '<div class="exd-li-time">'+when+'</div></div>';
+                        }).join('');
+                    }
+                }
+                // ===== الموافقات المعلّقة =====
+                var penEl = document.getElementById('exdPendingList');
+                if(penEl){
+                    var _rq = (typeof allRequestsCache!=='undefined'&&allRequestsCache)?allRequestsCache:[];
+                    var pend = _rq.filter(function(r){ return r.status==='pending'; }).slice().sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); }).slice(0,6);
+                    if(pend.length===0){
+                        penEl.innerHTML = '<div class="exd-li-empty">لا توجد موافقات معلّقة 🎉</div>';
+                    } else {
+                        penEl.innerHTML = pend.map(function(r){
+                            var nm = _exdReqName(r.requester_id);
+                            var tp = ''; try{ tp = t('reqType'+r.type.charAt(0).toUpperCase()+r.type.slice(1)); }catch(e){ tp = r.type||''; }
+                            var amt = r.amount?exdMoney(r.amount):'';
+                            var when = r.created_at?formatDate(r.created_at):'';
+                            return '<div class="exd-li exd-li-click" onclick="navigateTo(\'requests\')"><div class="exd-li-ic pend"><i class="fas fa-hourglass-half"></i></div>'+
+                                '<div class="exd-li-main"><div class="exd-li-t">'+esc(r.title||tp||'طلب')+'</div>'+
+                                '<div class="exd-li-s">'+esc(nm)+(tp?' · '+esc(tp):'')+'</div></div>'+
+                                '<div class="exd-li-right">'+(amt?'<div class="exd-li-amt">'+amt+'</div>':'')+'<div class="exd-li-time">'+when+'</div></div></div>';
+                        }).join('');
+                    }
+                }
+            }catch(e){ console.error('renderExecLists', e); }
+        }
+        
         let _exdC1 = null, _exdC2 = null;
         async function renderExecCharts(){
             if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
@@ -2651,6 +2715,7 @@
                 setVal('exdProjects', String(activeProjects));
                 setVal('exdPending', String(pendingApprovals));
                 try{ await renderExecCharts(); }catch(e){ console.error('exd charts', e); }
+                try{ renderExecLists(); }catch(e){ console.error('exd lists', e); }
             }catch(e){ console.error('renderExecDashboard error', e); }
         }
         
