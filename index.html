@@ -705,6 +705,13 @@
                                 <button class="btn btn-primary" style="justify-content:flex-start;gap:10px;margin-top:8px;" onclick="exportExcel('all')"><i class="fas fa-database"></i> تصدير كل البيانات (ملف واحد)</button>
                             </div>
                         </div>
+                        <div class="card" style="border:1px solid var(--success);">
+                            <div class="card-header"><h3 class="card-title"><i class="fas fa-shield-alt" style="color:var(--success);margin-inline-end:8px;"></i>نسخة احتياطية شاملة</h3></div>
+                            <div class="card-body">
+                                <p style="font-size:13px;color:var(--text-secondary);margin:0 0 14px;line-height:1.7;">تنزّل نسخة كاملة من كل بيانات النظام (٣٤ جدول) مباشرة من قاعدة البيانات في ملف واحد — بغض النظر عن الصفحات المفتوحة حالياً. يُنصح بعملها كل أسبوعين وحفظ الملف في مكان آمن (بريد إلكتروني أو تخزين سحابي).</p>
+                                <button class="btn btn-primary" id="fullBackupBtn" onclick="runFullBackup()"><i class="fas fa-shield-alt"></i> تنزيل نسخة احتياطية كاملة الآن</button>
+                            </div>
+                        </div>
                         <div class="card">
                             <div class="card-header"><h3 class="card-title"><i class="fas fa-file-pdf" style="color:#e74c3c;margin-inline-end:8px;"></i>طباعة / PDF</h3></div>
                             <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
@@ -1415,6 +1422,45 @@
             const fn = all ? `تقرير_شامل_${now}.xlsx` : `${type}_${now}.xlsx`;
             XLSX.writeFile(wb, fn);
             showToast('success', 'تم التصدير', fn);
+        }
+        async function runFullBackup(){
+            if (typeof XLSX === 'undefined') { showToast('error', 'خطأ', 'مكتبة Excel غير محمّلة، انتظر ثانية وأعد المحاولة'); return; }
+            if (typeof supabaseClient === 'undefined' || !supabaseClient) { showToast('error', 'خطأ', 'لا يوجد اتصال بقاعدة البيانات'); return; }
+            var btn = document.getElementById('fullBackupBtn');
+            var origHtml = btn ? btn.innerHTML : '';
+            if (btn) btn.disabled = true;
+            var TABLES = ['accounts','activity_log','attendance','employee_requests','employees','equipment','invoices','kitchen_bank_notifications','kitchen_expenses','kitchen_invoices','kitchen_items','kitchen_stock_movements','leaves','notifications','payroll','pm_milestones','pm_notes','pm_projects','pm_risks','pm_tasks','pr_bank_notifications','pr_communications','pr_contacts','pr_invoices','pr_meetings','pr_tasks','products','profiles','secretary_appointments','secretary_correspondence','stock_movements','suppliers','tickets','transactions'];
+            var wb = XLSX.utils.book_new();
+            var okCount = 0, emptyCount = 0, failCount = 0, failedTables = [];
+            for (var i=0; i<TABLES.length; i++){
+                var tbl = TABLES[i];
+                if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري السحب... ('+(i+1)+'/'+TABLES.length+') '+tbl;
+                try{
+                    var res = await supabaseClient.from(tbl).select('*');
+                    if (res.error) {
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['تعذّر الوصول لهذا الجدول'],[String((res.error && res.error.message) || res.error)]]), tbl.slice(0,31));
+                        failCount++; failedTables.push(tbl);
+                    } else if (!res.data || res.data.length===0) {
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['لا توجد بيانات']]), tbl.slice(0,31));
+                        emptyCount++;
+                    } else {
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(res.data), tbl.slice(0,31));
+                        okCount++;
+                    }
+                }catch(e){
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['خطأ غير متوقع'],[String((e && e.message) || e)]]), tbl.slice(0,31));
+                    failCount++; failedTables.push(tbl);
+                }
+            }
+            var now = new Date().toLocaleDateString('ar-EG').replace(/\//g,'-');
+            var fn = 'نسخة_احتياطية_AEECO_'+now+'.xlsx';
+            XLSX.writeFile(wb, fn);
+            if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+            if (failCount>0){
+                showToast('error', 'تم الحفظ مع ملاحظات', okCount+' جدول محفوظ، '+emptyCount+' فارغ، ⚠️ '+failCount+' تعذّر الوصول له: '+failedTables.join('، '));
+            } else {
+                showToast('success', 'تم إنشاء النسخة الاحتياطية', okCount+' جدول به بيانات، '+emptyCount+' جدول فارغ. الملف: '+fn);
+            }
         }
         function printReport(type) { const company=data.settings?.companyName||'شركتي'; const now=new Date().toLocaleDateString('ar-SA'); let title='',tableHTML=''; if(type==='financial'){const inc=(data.transactions||[]).filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);const exp=(data.transactions||[]).filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);title='التقرير المالي';tableHTML=`<table border="1" cellpadding="8" width="100%"><thead><tr style="background:#f0f0f0"><th>النوع</th><th>الوصف</th><th>الفئة</th><th>المبلغ</th><th>التاريخ</th></tr></thead><tbody>${(data.transactions||[]).map(t=>`<tr><td>${t.type==='income'?'إيراد':'مصروف'}</td><td>${esc(t.description)}</td><td>${esc(t.category)}</td><td>${t.amount.toLocaleString()}</td><td>${t.date}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="3"><b>إجمالي الإيرادات</b></td><td colspan="2"><b>${inc.toLocaleString()}</b></td></tr><tr><td colspan="3"><b>إجمالي المصروفات</b></td><td colspan="2"><b>${exp.toLocaleString()}</b></td></tr><tr><td colspan="3"><b>الرصيد الصافي</b></td><td colspan="2" style="color:${inc-exp>=0?'green':'red'}"><b>${(inc-exp).toLocaleString()}</b></td></tr></tfoot></table>`;}
         else if(type==='tickets'){title='تقرير الدعم الفني';tableHTML=`<table border="1" cellpadding="8" width="100%"><thead><tr style="background:#f0f0f0"><th>العنوان</th><th>الأولوية</th><th>الفئة</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${(data.tickets||[]).map(t=>`<tr><td>${esc(t.title)}</td><td>${esc(t.priority)}</td><td>${esc(t.category)}</td><td>${esc(t.status)}</td><td>${new Date(t.createdAt).toLocaleDateString('ar-SA')}</td></tr>`).join('')}</tbody></table>`;}
