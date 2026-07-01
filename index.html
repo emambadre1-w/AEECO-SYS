@@ -837,16 +837,16 @@
                     <div class="exd-banner">
                         <div class="exd-ico"><i class="fas fa-rocket"></i></div>
                         <div>
-                            <h3>المرحلة الأولى — الهيكل جاهز ✓</h3>
-                            <p>تم تجهيز اللوحة التنفيذية للمدير العام. الأرقام والرسوم البيانية ستُفعّل تدريجياً مع تراكم بيانات النظام الحقيقية في المراحل القادمة.</p>
+                            <h3>المؤشرات الأساسية مُفعّلة ✓</h3>
+                            <p>المؤشرات الأربعة بالأعلى الآن تعرض بياناتك الحقيقية مباشرةً من النظام. الرسوم البيانية والقوائم الحيّة ستُفعّل في المراحل القادمة.</p>
                         </div>
                     </div>
 
                     <div class="exd-kpis">
-                        <div class="exd-kpi k1"><div class="ic"><i class="fas fa-sack-dollar"></i></div><div class="lbl">إجمالي الإيرادات</div><div class="val ph">—</div></div>
-                        <div class="exd-kpi k2"><div class="ic"><i class="fas fa-chart-line"></i></div><div class="lbl">صافي الربح</div><div class="val ph">—</div></div>
-                        <div class="exd-kpi k3"><div class="ic"><i class="fas fa-diagram-project"></i></div><div class="lbl">المشاريع النشطة</div><div class="val ph">—</div></div>
-                        <div class="exd-kpi k4"><div class="ic"><i class="fas fa-clipboard-check"></i></div><div class="lbl">الموافقات المعلّقة</div><div class="val ph">—</div></div>
+                        <div class="exd-kpi k1"><div class="ic"><i class="fas fa-sack-dollar"></i></div><div class="lbl">إجمالي الإيرادات</div><div class="val ph" id="exdRevenue">—</div></div>
+                        <div class="exd-kpi k2"><div class="ic"><i class="fas fa-chart-line"></i></div><div class="lbl">صافي الربح</div><div class="val ph" id="exdProfit">—</div></div>
+                        <div class="exd-kpi k3"><div class="ic"><i class="fas fa-diagram-project"></i></div><div class="lbl">المشاريع النشطة</div><div class="val ph" id="exdProjects">—</div></div>
+                        <div class="exd-kpi k4"><div class="ic"><i class="fas fa-clipboard-check"></i></div><div class="lbl">الموافقات المعلّقة</div><div class="val ph" id="exdPending">—</div></div>
                     </div>
 
                     <div class="exd-grid g2">
@@ -2533,10 +2533,44 @@
             const pageEl = document.getElementById(`page-${page}`);
             const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
             if (pageEl) pageEl.classList.add('active');
-            if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard();
+            if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard(); if (page === 'execdash') renderExecDashboard();
             try { localStorage.setItem('aeeco_last_page', page); } catch (e) {}
             document.getElementById('sidebar').classList.remove('open');
         }
+                // ===== اللوحة التنفيذية — المرحلة 2: المؤشرات من البيانات الحقيقية =====
+        function exdMoney(n){
+            const cs={'SDG':'ج.س','SAR':'ر.س','USD':'$','EUR':'€','AED':'د.إ','EGP':'ج.م'};
+            const sym=cs[data.settings.currency]||data.settings.currency;
+            n=Number(n)||0; const a=Math.abs(n); let v;
+            if(a>=1e9) v=(n/1e9).toFixed(2)+' مليار';
+            else if(a>=1e6) v=(n/1e6).toFixed(1)+' مليون';
+            else v=Math.round(n).toLocaleString();
+            return v+' '+sym;
+        }
+        async function renderExecDashboard(){
+            try{
+                let income=0, expense=0, activeProjects=0, pendingApprovals=0;
+                try{
+                    const { data: txns } = await supabaseClient.from('transactions').select('type,amount');
+                    (txns||[]).forEach(function(t){ const a=Number(t.amount)||0; if(t.type==='income') income+=a; else if(t.type==='expense') expense+=a; });
+                }catch(e){ console.error('exd txns', e); }
+                try{
+                    const { data: projs } = await supabaseClient.from('pm_projects').select('status');
+                    activeProjects=(projs||[]).filter(function(p){ return p.status==='active'; }).length;
+                }catch(e){ console.error('exd projects', e); }
+                try{
+                    const { data: reqs } = await supabaseClient.from('employee_requests').select('status');
+                    pendingApprovals=(reqs||[]).filter(function(r){ return r.status==='pending'; }).length;
+                }catch(e){ console.error('exd requests', e); }
+                const profit=income-expense;
+                function setVal(id,val){ const el=document.getElementById(id); if(el){ el.textContent=val; el.classList.remove('ph'); } }
+                setVal('exdRevenue', exdMoney(income));
+                setVal('exdProfit', exdMoney(profit));
+                setVal('exdProjects', String(activeProjects));
+                setVal('exdPending', String(pendingApprovals));
+            }catch(e){ console.error('renderExecDashboard error', e); }
+        }
+        
         function renderReportsDashboard() {
             const host = document.getElementById('reportsDashboard');
             if (!host) return;
