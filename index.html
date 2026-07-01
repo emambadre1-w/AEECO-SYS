@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --primary: #0B6E4F;
@@ -829,6 +830,8 @@
                         #page-execdash .exd-ph-box{height:210px;border:2px dashed #E2E8F0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#94A3B8}
                         #page-execdash .exd-ph-box i{font-size:32px;opacity:.55}
                         #page-execdash .exd-ph-box span{font-size:13px}
+                        #page-execdash .exd-chart-box{position:relative;height:270px}
+                        #page-execdash .exd-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:13px;text-align:center}
                         @media(max-width:1100px){#page-execdash .exd-kpis{grid-template-columns:repeat(2,1fr)}#page-execdash .exd-grid.g2{grid-template-columns:1fr}}
                         @media(max-width:560px){#page-execdash .exd-kpis{grid-template-columns:1fr}}
                     </style>
@@ -850,8 +853,8 @@
                     </div>
 
                     <div class="exd-grid g2">
-                        <div class="exd-card"><div class="ch">الإيرادات مقابل المصروفات</div><div class="cb"><div class="exd-ph-box"><i class="fas fa-chart-area"></i><span>الرسم البياني — يُفعّل في المرحلة القادمة</span></div></div></div>
-                        <div class="exd-card"><div class="ch">توزيع المبيعات حسب القطاع</div><div class="cb"><div class="exd-ph-box"><i class="fas fa-chart-pie"></i><span>الرسم البياني — يُفعّل في المرحلة القادمة</span></div></div></div>
+                        <div class="exd-card"><div class="ch">الإيرادات مقابل المصروفات (آخر ٦ أشهر)</div><div class="cb"><div class="exd-chart-box"><canvas id="exdChartRevExp"></canvas><div class="exd-empty" id="exdEmpty1" style="display:none">لا توجد بيانات كافية بعد</div></div></div></div>
+                        <div class="exd-card"><div class="ch">توزيع الإيرادات حسب الفئة</div><div class="cb"><div class="exd-chart-box"><canvas id="exdChartCategory"></canvas><div class="exd-empty" id="exdEmpty2" style="display:none">لا توجد بيانات كافية بعد</div></div></div></div>
                     </div>
 
                     <div class="exd-grid g2">
@@ -2547,6 +2550,85 @@
             else v=Math.round(n).toLocaleString();
             return v+' '+sym;
         }
+        let _exdC1 = null, _exdC2 = null;
+        async function renderExecCharts(){
+            if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
+            var txns = [];
+            try {
+                var _r = await supabaseClient.from('transactions').select('type,amount,date,category');
+                txns = (_r && _r.data) || [];
+            } catch(e){ console.error('exd chart txns', e); return; }
+
+            // ===== الرسم ١: الإيرادات مقابل المصروفات (آخر ٦ أشهر) =====
+            var arMonths = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+            var now = new Date();
+            var mKeys = [], mLabels = [], incMap = {}, expMap = {};
+            for (var i=5; i>=0; i--){
+                var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+                var key = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
+                mKeys.push(key); mLabels.push(arMonths[d.getMonth()]); incMap[key]=0; expMap[key]=0;
+            }
+            txns.forEach(function(t){
+                if(!t.date) return;
+                var k = String(t.date).slice(0,7);
+                if(!(k in incMap)) return;
+                var a = Number(t.amount)||0;
+                if(t.type==='income') incMap[k]+=a; else if(t.type==='expense') expMap[k]+=a;
+            });
+            var incArr = mKeys.map(function(k){return incMap[k];});
+            var expArr = mKeys.map(function(k){return expMap[k];});
+            var has1 = incArr.concat(expArr).some(function(v){return v>0;});
+            var cv1 = document.getElementById('exdChartRevExp');
+            var em1 = document.getElementById('exdEmpty1');
+            if (_exdC1){ try{_exdC1.destroy();}catch(e){} _exdC1=null; }
+            if (has1 && cv1){
+                if(em1) em1.style.display='none';
+                cv1.style.display='block';
+                _exdC1 = new Chart(cv1, {
+                    type:'bar',
+                    data:{ labels:mLabels, datasets:[
+                        { label:'الإيرادات', data:incArr, backgroundColor:'#22C55E', borderRadius:5, maxBarThickness:26 },
+                        { label:'المصروفات', data:expArr, backgroundColor:'#EF4444', borderRadius:5, maxBarThickness:26 }
+                    ]},
+                    options:{ responsive:true, maintainAspectRatio:false,
+                        plugins:{ legend:{ labels:{ color:'#1E293B', font:{family:'Cairo',size:12}, usePointStyle:true, pointStyle:'circle' } },
+                                  tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+exdMoney(c.parsed.y); } } } },
+                        scales:{ x:{ ticks:{ color:'#64748B', font:{family:'Cairo'} }, grid:{ display:false } },
+                                 y:{ ticks:{ color:'#64748B', font:{family:'Cairo'}, callback:function(v){ return exdMoney(v); } }, grid:{ color:'#E2E8F0' } } } }
+                });
+            } else if (cv1) {
+                cv1.style.display='none'; if(em1) em1.style.display='flex';
+            }
+
+            // ===== الرسم ٢: توزيع الإيرادات حسب الفئة =====
+            var catMap = {};
+            txns.forEach(function(t){
+                if(t.type!=='income') return;
+                var c = (t.category && String(t.category).trim()) || 'غير مصنّف';
+                catMap[c] = (catMap[c]||0) + (Number(t.amount)||0);
+            });
+            var cats = Object.keys(catMap).filter(function(c){return catMap[c]>0;});
+            var has2 = cats.length>0;
+            var cv2 = document.getElementById('exdChartCategory');
+            var em2 = document.getElementById('exdEmpty2');
+            if (_exdC2){ try{_exdC2.destroy();}catch(e){} _exdC2=null; }
+            if (has2 && cv2){
+                if(em2) em2.style.display='none';
+                cv2.style.display='block';
+                var pal = ['#1D39FF','#0B6E4F','#FA4B0E','#22C55E','#F59E0B','#8B5CF6','#EC4899','#14B8A6','#64748B'];
+                _exdC2 = new Chart(cv2, {
+                    type:'doughnut',
+                    data:{ labels:cats, datasets:[{ data:cats.map(function(c){return catMap[c];}),
+                            backgroundColor:cats.map(function(c,i){return pal[i%pal.length];}), borderWidth:2, borderColor:'#FFFFFF' }]},
+                    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+                        plugins:{ legend:{ position:'bottom', labels:{ color:'#1E293B', font:{family:'Cairo',size:12}, padding:14, usePointStyle:true, pointStyle:'circle' } },
+                                  tooltip:{ callbacks:{ label:function(c){ return c.label+': '+exdMoney(c.parsed); } } } } }
+                });
+            } else if (cv2) {
+                cv2.style.display='none'; if(em2) em2.style.display='flex';
+            }
+        }
+        
         async function renderExecDashboard(){
             try{
                 let income=0, expense=0, activeProjects=0, pendingApprovals=0;
@@ -2568,6 +2650,7 @@
                 setVal('exdProfit', exdMoney(profit));
                 setVal('exdProjects', String(activeProjects));
                 setVal('exdPending', String(pendingApprovals));
+                try{ await renderExecCharts(); }catch(e){ console.error('exd charts', e); }
             }catch(e){ console.error('renderExecDashboard error', e); }
         }
         
