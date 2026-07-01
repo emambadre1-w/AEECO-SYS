@@ -807,6 +807,11 @@
                         #page-execdash .exd-banner .exd-ico{width:46px;height:46px;border-radius:12px;background:rgba(250,75,14,.12);color:#FA4B0E;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
                         #page-execdash .exd-banner h3{font-size:15px;font-weight:700;color:#1E293B;margin:0 0 3px}
                         #page-execdash .exd-banner p{font-size:13px;color:#64748B;margin:0;line-height:1.6}
+                        #page-execdash .exd-filters{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px 18px;margin-bottom:22px}
+                        #page-execdash .exd-filter-group{display:flex;flex-direction:column;gap:6px;min-width:190px}
+                        #page-execdash .exd-filter-group label{font-size:12px;font-weight:600;color:#64748B}
+                        #page-execdash .exd-filter-hint{font-weight:400;color:#94A3B8;font-size:11px}
+                        #page-execdash .exd-filter-group select{font-size:13px}
                         #page-execdash .exd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
                         #page-execdash .exd-kpi{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:20px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
                         #page-execdash .exd-kpi::before{content:'';position:absolute;top:0;right:0;left:0;height:3px}
@@ -858,7 +863,26 @@
                         <div class="exd-ico"><i class="fas fa-rocket"></i></div>
                         <div>
                             <h3>المؤشرات الأساسية مُفعّلة ✓</h3>
-                            <p>المؤشرات الأربعة بالأعلى الآن تعرض بياناتك الحقيقية مباشرةً من النظام. الرسوم البيانية والقوائم الحيّة ستُفعّل في المراحل القادمة.</p>
+                            <p>اللوحة جاهزة بالكامل. استخدم الفلاتر بالأسفل لتخصيص الفترة الزمنية، وفلترة الموافقات المعلّقة حسب القسم.</p>
+                        </div>
+                    </div>
+
+                    <div class="exd-filters">
+                        <div class="exd-filter-group">
+                            <label>الفترة الزمنية</label>
+                            <select id="exdFilterPeriod" class="form-select" onchange="renderExecDashboard()">
+                                <option value="month">الشهر الحالي</option>
+                                <option value="q3">آخر 3 أشهر</option>
+                                <option value="q6" selected>آخر 6 أشهر</option>
+                                <option value="year">هذا العام</option>
+                                <option value="all">آخر 12 شهر</option>
+                            </select>
+                        </div>
+                        <div class="exd-filter-group">
+                            <label>القسم <span class="exd-filter-hint">(الموافقات المعلّقة فقط)</span></label>
+                            <select id="exdFilterDept" class="form-select" onchange="renderExecDashboard()">
+                                <option value="">كل الأقسام</option>
+                            </select>
                         </div>
                     </div>
 
@@ -870,8 +894,8 @@
                     </div>
 
                     <div class="exd-grid g2">
-                        <div class="exd-card"><div class="ch">الإيرادات مقابل المصروفات (آخر ٦ أشهر)</div><div class="cb"><div class="exd-chart-box"><canvas id="exdChartRevExp"></canvas><div class="exd-empty" id="exdEmpty1" style="display:none">لا توجد بيانات كافية بعد</div></div></div></div>
-                        <div class="exd-card"><div class="ch">توزيع الإيرادات حسب الفئة</div><div class="cb"><div class="exd-chart-box"><canvas id="exdChartCategory"></canvas><div class="exd-empty" id="exdEmpty2" style="display:none">لا توجد بيانات كافية بعد</div></div></div></div>
+                        <div class="exd-card"><div class="ch" id="exdChTitle1">الإيرادات مقابل المصروفات (آخر ٦ أشهر)</div><div class="cb"><div class="exd-chart-box"><canvas id="exdChartRevExp"></canvas><div class="exd-empty" id="exdEmpty1" style="display:none">لا توجد بيانات كافية بعد</div></div></div></div>
+                        <div class="exd-card"><div class="ch" id="exdChTitle2">توزيع الإيرادات حسب الفئة</div><div class="cb"><div class="exd-chart-box"><canvas id="exdChartCategory"></canvas><div class="exd-empty" id="exdEmpty2" style="display:none">لا توجد بيانات كافية بعد</div></div></div></div>
                     </div>
 
                     <div class="exd-grid g2">
@@ -2553,7 +2577,7 @@
             const pageEl = document.getElementById(`page-${page}`);
             const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
             if (pageEl) pageEl.classList.add('active');
-            if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard(); if (page === 'execdash') renderExecDashboard();
+            if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard(); if (page === 'execdash') { _exdInitFilters().then(renderExecDashboard); }
             try { localStorage.setItem('aeeco_last_page', page); } catch (e) {}
             document.getElementById('sidebar').classList.remove('open');
         }
@@ -2567,18 +2591,78 @@
             else v=Math.round(n).toLocaleString();
             return v+' '+sym;
         }
+                function _exdPeriodRange(key){
+            var now = new Date();
+            var start;
+            if(key==='month'){ start = new Date(now.getFullYear(), now.getMonth(), 1); }
+            else if(key==='q3'){ start = new Date(now.getFullYear(), now.getMonth()-2, 1); }
+            else if(key==='q6'){ start = new Date(now.getFullYear(), now.getMonth()-5, 1); }
+            else if(key==='year'){ start = new Date(now.getFullYear(), 0, 1); }
+            else { start = null; }
+            return { start: start, end: now };
+        }
+        function _exdInRange(dateStr, range){
+            if(!range || !range.start) return true;
+            if(!dateStr) return false;
+            var d = new Date(dateStr);
+            if(isNaN(d.getTime())) return false;
+            return d >= range.start && d <= range.end;
+        }
+        function _exdMonthsForPeriod(key){
+            if(key==='month') return 1;
+            if(key==='q3') return 3;
+            if(key==='q6') return 6;
+            if(key==='year') return new Date().getMonth()+1;
+            return 12;
+        }
+        function _exdPeriodLabel(key){
+            if(key==='month') return 'الشهر الحالي';
+            if(key==='q3') return 'آخر 3 أشهر';
+            if(key==='q6') return 'آخر 6 أشهر';
+            if(key==='year') return 'هذا العام';
+            return 'آخر 12 شهر';
+        }
+        async function _exdEnsureProfiles(){
+            try{
+                if(typeof profilesCache!=='undefined' && profilesCache && Object.keys(profilesCache).length>0) return;
+                const { data: profs } = await supabaseClient.from('profiles').select('*');
+                (profs||[]).forEach(function(p){ profilesCache[p.id]=p; });
+            }catch(e){ console.warn('_exdEnsureProfiles', e); }
+        }
+        async function _exdInitFilters(){
+            await _exdEnsureProfiles();
+            var sel = document.getElementById('exdFilterDept');
+            if(!sel) return;
+            var prev = sel.value;
+            var depts = {};
+            try{
+                Object.keys(profilesCache).forEach(function(id){
+                    var d = profilesCache[id] && profilesCache[id].department;
+                    if(d && String(d).trim()) depts[String(d).trim()] = true;
+                });
+            }catch(e){}
+            var list = Object.keys(depts).sort(function(a,b){ return a.localeCompare(b,'ar'); });
+            var html = '<option value="">كل الأقسام</option>' + list.map(function(d){ return '<option value="'+esc(d)+'">'+esc(d)+'</option>'; }).join('');
+            sel.innerHTML = html;
+            if(list.indexOf(prev)>=0) sel.value = prev;
+        }
+        
         function _exdReqName(id){
             try{ var p=(typeof profilesCache!=='undefined'&&profilesCache)?profilesCache[id]:null; if(p&&p.full_name) return p.full_name; }catch(e){}
             return '—';
         }
         function renderExecLists(){
             try{
+                var periodKey = (document.getElementById('exdFilterPeriod')||{}).value || 'q6';
+                var deptKey = (document.getElementById('exdFilterDept')||{}).value || '';
+                var range = _exdPeriodRange(periodKey);
                 // ===== آخر الأنشطة =====
                 var actEl = document.getElementById('exdActivityList');
                 if(actEl){
-                    var acts = (data.activityLog||[]).slice().sort(function(a,b){ return String(b.timestamp||'').localeCompare(String(a.timestamp||'')); }).slice(0,6);
+                    var allActs = (data.activityLog||[]);
+                    var acts = allActs.filter(function(a){ return _exdInRange(a.timestamp, range); }).slice().sort(function(a,b){ return String(b.timestamp||'').localeCompare(String(a.timestamp||'')); }).slice(0,6);
                     if(acts.length===0){
-                        actEl.innerHTML = '<div class="exd-li-empty">لا توجد أنشطة بعد</div>';
+                        actEl.innerHTML = '<div class="exd-li-empty">'+(allActs.length>0?'لا يوجد نشاط في هذه الفترة':'لا توجد أنشطة بعد')+'</div>';
                     } else {
                         actEl.innerHTML = acts.map(function(a){
                             var cls = a.action==='create'?'create':a.action==='delete'?'delete':'update';
@@ -2595,9 +2679,14 @@
                 var penEl = document.getElementById('exdPendingList');
                 if(penEl){
                     var _rq = (typeof allRequestsCache!=='undefined'&&allRequestsCache)?allRequestsCache:[];
-                    var pend = _rq.filter(function(r){ return r.status==='pending'; }).slice().sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); }).slice(0,6);
+                    var allPend = _rq.filter(function(r){ return r.status==='pending'; });
+                    var pend = allPend.filter(function(r){
+                        if(!_exdInRange(r.created_at, range)) return false;
+                        if(deptKey){ var p=profilesCache[r.requester_id]; if(!p||p.department!==deptKey) return false; }
+                        return true;
+                    }).slice().sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); }).slice(0,6);
                     if(pend.length===0){
-                        penEl.innerHTML = '<div class="exd-li-empty">لا توجد موافقات معلّقة 🎉</div>';
+                        penEl.innerHTML = '<div class="exd-li-empty">'+(allPend.length>0?'لا توجد موافقات ضمن هذا الفلتر':'لا توجد موافقات معلّقة 🎉')+'</div>';
                     } else {
                         penEl.innerHTML = pend.map(function(r){
                             var nm = _exdReqName(r.requester_id);
@@ -2617,17 +2706,23 @@
         let _exdC1 = null, _exdC2 = null;
         async function renderExecCharts(){
             if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
+            var periodKey = (document.getElementById('exdFilterPeriod')||{}).value || 'q6';
+            var range = _exdPeriodRange(periodKey);
+            var pLabel = _exdPeriodLabel(periodKey);
+            var h1 = document.getElementById('exdChTitle1'); if(h1) h1.textContent = 'الإيرادات مقابل المصروفات ('+pLabel+')';
+            var h2 = document.getElementById('exdChTitle2'); if(h2) h2.textContent = 'توزيع الإيرادات حسب الفئة ('+pLabel+')';
             var txns = [];
             try {
                 var _r = await supabaseClient.from('transactions').select('type,amount,date,category');
                 txns = (_r && _r.data) || [];
             } catch(e){ console.error('exd chart txns', e); return; }
 
-            // ===== الرسم ١: الإيرادات مقابل المصروفات (آخر ٦ أشهر) =====
+            // ===== الرسم ١: الإيرادات مقابل المصروفات =====
             var arMonths = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
             var now = new Date();
+            var nMonths = _exdMonthsForPeriod(periodKey);
             var mKeys = [], mLabels = [], incMap = {}, expMap = {};
-            for (var i=5; i>=0; i--){
+            for (var i=nMonths-1; i>=0; i--){
                 var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
                 var key = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
                 mKeys.push(key); mLabels.push(arMonths[d.getMonth()]); incMap[key]=0; expMap[key]=0;
@@ -2668,6 +2763,7 @@
             var catMap = {};
             txns.forEach(function(t){
                 if(t.type!=='income') return;
+                if(!_exdInRange(t.date, range)) return;
                 var c = (t.category && String(t.category).trim()) || 'غير مصنّف';
                 catMap[c] = (catMap[c]||0) + (Number(t.amount)||0);
             });
@@ -2695,18 +2791,26 @@
         
         async function renderExecDashboard(){
             try{
+                var periodKey = (document.getElementById('exdFilterPeriod')||{}).value || 'q6';
+                var deptKey = (document.getElementById('exdFilterDept')||{}).value || '';
+                var range = _exdPeriodRange(periodKey);
                 let income=0, expense=0, activeProjects=0, pendingApprovals=0;
                 try{
-                    const { data: txns } = await supabaseClient.from('transactions').select('type,amount');
-                    (txns||[]).forEach(function(t){ const a=Number(t.amount)||0; if(t.type==='income') income+=a; else if(t.type==='expense') expense+=a; });
+                    const { data: txns } = await supabaseClient.from('transactions').select('type,amount,date');
+                    (txns||[]).forEach(function(t){ if(!_exdInRange(t.date, range)) return; const a=Number(t.amount)||0; if(t.type==='income') income+=a; else if(t.type==='expense') expense+=a; });
                 }catch(e){ console.error('exd txns', e); }
                 try{
                     const { data: projs } = await supabaseClient.from('pm_projects').select('status');
                     activeProjects=(projs||[]).filter(function(p){ return p.status==='active'; }).length;
                 }catch(e){ console.error('exd projects', e); }
                 try{
-                    const { data: reqs } = await supabaseClient.from('employee_requests').select('status');
-                    pendingApprovals=(reqs||[]).filter(function(r){ return r.status==='pending'; }).length;
+                    const { data: reqs } = await supabaseClient.from('employee_requests').select('status,requester_id,created_at');
+                    pendingApprovals=(reqs||[]).filter(function(r){
+                        if(r.status!=='pending') return false;
+                        if(!_exdInRange(r.created_at, range)) return false;
+                        if(deptKey){ var p=profilesCache[r.requester_id]; if(!p||p.department!==deptKey) return false; }
+                        return true;
+                    }).length;
                 }catch(e){ console.error('exd requests', e); }
                 const profit=income-expense;
                 function setVal(id,val){ const el=document.getElementById(id); if(el){ el.textContent=val; el.classList.remove('ph'); } }
