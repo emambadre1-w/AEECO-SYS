@@ -781,6 +781,11 @@
                         <div><h1 class="page-title" data-i18n="hr">الموارد البشرية</h1><p class="page-subtitle" data-i18n="hrSubtitle">إدارة الموظفين والحضور</p></div>
                         <button class="btn btn-primary" onclick="openModal('employeeModal')"><i class="fas fa-plus"></i><span data-i18n="newEmployee">موظف جديد</span></button>
                     </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+                        <div class="card" style="padding:18px"><div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px">إجمالي الموظفين</div><div style="font-size:24px;font-weight:700;color:var(--text-primary)" id="hrSumTotal">—</div></div>
+                        <div class="card" style="padding:18px"><div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px">طلبات إجازة معلّقة</div><div style="font-size:24px;font-weight:700;color:var(--warning)" id="hrSumPending">—</div></div>
+                        <div class="card" style="padding:18px"><div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px">في إجازة اليوم</div><div style="font-size:24px;font-weight:700;color:var(--text-primary)" id="hrSumOnLeave">—</div></div>
+                    </div>
                     <div class="tabs">
                         <button class="tab active" data-tab="employees" data-i18n="employees">الموظفين</button>
                         <button class="tab" data-tab="attendance" data-i18n="attendance">الحضور</button>
@@ -788,9 +793,10 @@
                         <button class="tab" data-tab="payroll" data-i18n="payroll">الرواتب</button>
                     </div>
                     <div class="tab-content" id="tab-employees"><div class="card"><div class="card-body"><div style="margin-bottom:14px;display:flex;align-items:center;gap:10px"><label class="form-label" style="margin:0" data-i18n="status">الحالة</label><select class="form-select" id="empStatusFilter" style="max-width:220px" onchange="renderEmployees()"><option value="all" data-i18n="allStatuses">الكل</option><option value="active" data-i18n="statusActive">نشط</option><option value="onLeave" data-i18n="statusOnLeave">في إجازة</option><option value="terminated" data-i18n="statusTerminated">منتهية خدمته</option></select></div><div class="table-container"><table><thead><tr><th data-i18n="employeeId">رقم الموظف</th><th data-i18n="name">الاسم</th><th data-i18n="position">المنصب</th><th data-i18n="department">القسم</th><th data-i18n="phone">الهاتف</th><th data-i18n="status">الحالة</th><th data-i18n="actions">الإجراءات</th></tr></thead><tbody id="employeesTableBody"></tbody></table></div></div></div></div>
-                    <div class="tab-content" id="tab-attendance" style="display: none;"><div class="card"><div class="card-header"><h3 class="card-title" data-i18n="attendanceRecords">سجلات الحضور</h3><button class="btn btn-sm btn-primary" onclick="openModal('attendanceModal')"><i class="fas fa-clock"></i><span data-i18n="recordAttendance">تسجيل حضور</span></button></div><div class="card-body"><div class="table-container"><table><thead><tr><th data-i18n="date">التاريخ</th><th data-i18n="employee">الموظف</th><th data-i18n="checkIn">وقت الحضور</th><th data-i18n="checkOut">وقت الانصراف</th><th data-i18n="status">الحالة</th></tr></thead><tbody id="attendanceTableBody"></tbody></table></div></div></div></div>
+                    <div class="tab-content" id="tab-attendance" style="display: none;"><div class="card" style="margin-bottom:20px"><div class="card-header"><h3 class="card-title"><i class="fas fa-calendar-check"></i> الملخص الشهري للحضور</h3><input type="month" id="attSummaryMonth" class="form-input" style="width:auto" onchange="renderAttendanceSummary()"></div><div class="card-body"><div class="table-container"><table><thead><tr><th>الموظف</th><th>أيام الحضور</th><th>إجمالي الساعات</th><th>ساعات إضافية</th><th>أيام تأخير</th></tr></thead><tbody id="attSummaryBody"></tbody></table></div></div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title" data-i18n="attendanceRecords">سجلات الحضور</h3><button class="btn btn-sm btn-primary" onclick="openModal('attendanceModal')"><i class="fas fa-clock"></i><span data-i18n="recordAttendance">تسجيل حضور</span></button></div><div class="card-body"><div class="table-container"><table><thead><tr><th data-i18n="date">التاريخ</th><th data-i18n="employee">الموظف</th><th data-i18n="checkIn">وقت الحضور</th><th data-i18n="checkOut">وقت الانصراف</th><th data-i18n="status">الحالة</th></tr></thead><tbody id="attendanceTableBody"></tbody></table></div></div></div></div>
                     <div class="tab-content" id="tab-leaves" style="display: none;"><div class="card" style="margin-bottom:20px"><div class="card-header"><h3 class="card-title" data-i18n="leaveBalances">أرصدة الإجازات السنوية</h3></div><div class="card-body"><div class="table-container"><table><thead><tr><th data-i18n="employee">الموظف</th><th data-i18n="entitlement">الرصيد السنوي</th><th data-i18n="usedDays">المستخدَم</th><th data-i18n="remainingDays">المتبقّي</th></tr></thead><tbody id="leaveBalancesBody"></tbody></table></div></div></div><div class="card"><div class="card-header"><h3 class="card-title" data-i18n="leaveRequests">طلبات الإجازات</h3><button class="btn btn-sm btn-primary" onclick="openModal('leaveModal')"><i class="fas fa-calendar-alt"></i><span data-i18n="newLeave">طلب إجازة</span></button></div><div class="card-body"><div class="table-container"><table><thead><tr><th data-i18n="employee">الموظف</th><th data-i18n="leaveType">نوع الإجازة</th><th data-i18n="fromDate">من تاريخ</th><th data-i18n="toDate">إلى تاريخ</th><th data-i18n="status">الحالة</th><th data-i18n="actions">الإجراءات</th></tr></thead><tbody id="leavesTableBody"></tbody></table></div></div></div></div>
-                    <div class="tab-content" id="tab-payroll" style="display: none;"><div class="card"><div class="card-header"><h3 class="card-title" data-i18n="payrollRecords">سجلات الرواتب</h3><button class="btn btn-sm btn-primary" onclick="openModal('payrollModal')"><i class="fas fa-dollar-sign"></i><span data-i18n="newPayroll">راتب جديد</span></button></div><div class="card-body"><div class="table-container"><table><thead><tr><th data-i18n="month">الشهر</th><th data-i18n="employee">الموظف</th><th data-i18n="grossSalary">الإجمالي</th><th data-i18n="deductions">الخصومات</th><th data-i18n="netSalary">صافي الراتب</th><th data-i18n="actions">الإجراءات</th></tr></thead><tbody id="payrollTableBody"></tbody></table></div></div></div></div>
+                    <div class="tab-content" id="tab-payroll" style="display: none;"><div class="card"><div class="card-header"><h3 class="card-title" data-i18n="payrollRecords">سجلات الرواتب</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="month" id="payrollGenMonth" class="form-input" style="width:auto"><button class="btn btn-sm btn-secondary" onclick="generateMonthlyPayroll()"><i class="fas fa-bolt"></i><span>توليد رواتب الشهر</span></button><button class="btn btn-sm btn-primary" onclick="openModal('payrollModal')"><i class="fas fa-dollar-sign"></i><span data-i18n="newPayroll">راتب جديد</span></button></div></div><div class="card-body"><div class="table-container"><table><thead><tr><th data-i18n="month">الشهر</th><th data-i18n="employee">الموظف</th><th data-i18n="grossSalary">الإجمالي</th><th data-i18n="deductions">الخصومات</th><th data-i18n="netSalary">صافي الراتب</th><th data-i18n="actions">الإجراءات</th></tr></thead><tbody id="payrollTableBody"></tbody></table></div></div></div></div>
                 </div>
                 <!-- Admin Page -->
                 <div class="page" id="page-admin">
@@ -810,17 +816,17 @@
                 </div>
                 <!-- Executive Dashboard Page -->
                 <div class="page" id="page-execdash">
-                    <style>
-                        #page-execdash{background:#F0F4FA;border:1px solid #E2E8F0;border-radius:16px;padding:24px}
-                        #page-execdash .page-title{color:#1E293B}
-                        #page-execdash .page-subtitle{color:#64748B}
-                        #page-execdash .exd-filters{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px 18px;margin-bottom:22px}
+                                        <style>
+                        #page-execdash{background:var(--bg-primary);border:1px solid var(--border-color);border-radius:16px;padding:24px}
+                        #page-execdash .page-title{color:var(--text-primary)}
+                        #page-execdash .page-subtitle{color:var(--text-secondary)}
+                        #page-execdash .exd-filters{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:12px;padding:14px 18px;margin-bottom:22px}
                         #page-execdash .exd-filter-group{display:flex;flex-direction:column;gap:6px;min-width:190px}
-                        #page-execdash .exd-filter-group label{font-size:12px;font-weight:600;color:#64748B}
-                        #page-execdash .exd-filter-hint{font-weight:400;color:#94A3B8;font-size:11px}
+                        #page-execdash .exd-filter-group label{font-size:12px;font-weight:600;color:var(--text-secondary)}
+                        #page-execdash .exd-filter-hint{font-weight:400;color:var(--text-muted);font-size:11px}
                         #page-execdash .exd-filter-group select{font-size:13px}
                         #page-execdash .exd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
-                        #page-execdash .exd-kpi{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:20px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+                        #page-execdash .exd-kpi{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:20px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
                         #page-execdash .exd-kpi::before{content:'';position:absolute;top:0;right:0;left:0;height:3px}
                         #page-execdash .exd-kpi.k1::before{background:#1D39FF}
                         #page-execdash .exd-kpi.k2::before{background:#22C55E}
@@ -831,36 +837,36 @@
                         #page-execdash .exd-kpi.k2 .ic{background:rgba(34,197,94,.12);color:#16A34A}
                         #page-execdash .exd-kpi.k3 .ic{background:rgba(250,75,14,.12);color:#FA4B0E}
                         #page-execdash .exd-kpi.k4 .ic{background:rgba(11,110,79,.12);color:#0B6E4F}
-                        #page-execdash .exd-kpi .lbl{font-size:13px;color:#64748B;margin-bottom:6px;font-weight:500}
-                        #page-execdash .exd-kpi .val{font-size:26px;font-weight:800;color:#1E293B;line-height:1}
-                        #page-execdash .exd-kpi .val.ph{color:#94A3B8}
+                        #page-execdash .exd-kpi .lbl{font-size:13px;color:var(--text-secondary);margin-bottom:6px;font-weight:500}
+                        #page-execdash .exd-kpi .val{font-size:26px;font-weight:800;color:var(--text-primary);line-height:1}
+                        #page-execdash .exd-kpi .val.ph{color:var(--text-muted)}
                         #page-execdash .exd-grid{display:grid;gap:16px;margin-bottom:18px}
                         #page-execdash .exd-grid.g2{grid-template-columns:1.6fr 1fr}
-                        #page-execdash .exd-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-                        #page-execdash .exd-card .ch{padding:15px 18px;border-bottom:1px solid #E2E8F0;font-size:14px;font-weight:700;color:#1E293B}
+                        #page-execdash .exd-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm)}
+                        #page-execdash .exd-card .ch{padding:15px 18px;border-bottom:1px solid var(--border-color);font-size:14px;font-weight:700;color:var(--text-primary)}
                         #page-execdash .exd-card .cb{padding:18px}
-                        #page-execdash .exd-ph-box{height:210px;border:2px dashed #E2E8F0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#94A3B8}
+                        #page-execdash .exd-ph-box{height:210px;border:2px dashed var(--border-color);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-muted)}
                         #page-execdash .exd-ph-box i{font-size:32px;opacity:.55}
                         #page-execdash .exd-ph-box span{font-size:13px}
                         #page-execdash .exd-chart-box{position:relative;height:270px}
-                        #page-execdash .exd-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:13px;text-align:center}
+                        #page-execdash .exd-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px;text-align:center}
                         #page-execdash .exd-list{display:flex;flex-direction:column}
                         #page-execdash .exd-li{display:flex;align-items:center;gap:12px;padding:11px 8px;border-radius:9px;transition:background .12s}
-                        #page-execdash .exd-li + .exd-li{border-top:1px solid #F1F5F9}
+                        #page-execdash .exd-li + .exd-li{border-top:1px solid var(--border-color)}
                         #page-execdash .exd-li-click{cursor:pointer}
-                        #page-execdash .exd-li-click:hover{background:#F8FAFC}
+                        #page-execdash .exd-li-click:hover{background:var(--bg-tertiary)}
                         #page-execdash .exd-li-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
                         #page-execdash .exd-li-ic.act-create{background:rgba(34,197,94,.12);color:#16A34A}
                         #page-execdash .exd-li-ic.act-delete{background:rgba(239,68,68,.12);color:#EF4444}
                         #page-execdash .exd-li-ic.act-update{background:rgba(29,57,255,.12);color:#1D39FF}
                         #page-execdash .exd-li-ic.pend{background:rgba(245,158,11,.14);color:#D97706}
                         #page-execdash .exd-li-main{flex:1;min-width:0}
-                        #page-execdash .exd-li-t{font-size:13px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-                        #page-execdash .exd-li-s{font-size:12px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-                        #page-execdash .exd-li-time{font-size:11px;color:#94A3B8;flex-shrink:0}
+                        #page-execdash .exd-li-t{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+                        #page-execdash .exd-li-s{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+                        #page-execdash .exd-li-time{font-size:11px;color:var(--text-muted);flex-shrink:0}
                         #page-execdash .exd-li-right{text-align:left;flex-shrink:0}
                         #page-execdash .exd-li-amt{font-size:13px;font-weight:700;color:#0B6E4F}
-                        #page-execdash .exd-li-empty{padding:38px 0;text-align:center;color:#94A3B8;font-size:13px}
+                        #page-execdash .exd-li-empty{padding:38px 0;text-align:center;color:var(--text-muted);font-size:13px}
                         @media(max-width:1100px){#page-execdash .exd-kpis{grid-template-columns:repeat(2,1fr)}#page-execdash .exd-grid.g2{grid-template-columns:1fr}}
                         @media(max-width:560px){#page-execdash .exd-kpis{grid-template-columns:1fr}}
                     </style>
@@ -905,26 +911,22 @@
 
                 <!-- Project Portfolio Page -->
                 <div class="page" id="page-projectportfolio">
-                    <style>
-                        #page-projectportfolio{background:#F0F4FA;border:1px solid #E2E8F0;border-radius:16px;padding:24px}
-                        #page-projectportfolio .page-title{color:#1E293B}
-                        #page-projectportfolio .page-subtitle{color:#64748B}
+                                        <style>
+                        #page-projectportfolio{background:var(--bg-primary);border:1px solid var(--border-color);border-radius:16px;padding:24px}
+                        #page-projectportfolio .page-title{color:var(--text-primary)}
+                        #page-projectportfolio .page-subtitle{color:var(--text-secondary)}
                         #page-projectportfolio .ppf-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
-                        #page-projectportfolio .ppf-kpi{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+                        #page-projectportfolio .ppf-kpi{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;box-shadow:var(--shadow-sm)}
                         #page-projectportfolio .ppf-kpi .ic{width:40px;height:40px;border-radius:10px;background:rgba(11,110,79,.12);color:#0B6E4F;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:12px}
-                        #page-projectportfolio .ppf-kpi .lbl{font-size:13px;color:#64748B;margin-bottom:6px}
-                        #page-projectportfolio .ppf-kpi .val{font-size:22px;font-weight:800;color:#1E293B}
+                        #page-projectportfolio .ppf-kpi .lbl{font-size:13px;color:var(--text-secondary);margin-bottom:6px}
+                        #page-projectportfolio .ppf-kpi .val{font-size:22px;font-weight:800;color:var(--text-primary)}
                         #page-projectportfolio .ppf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
-                        #page-projectportfolio .ppf-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+                        #page-projectportfolio .ppf-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;box-shadow:var(--shadow-sm)}
                         #page-projectportfolio .ppf-card .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:12px}
-                        #page-projectportfolio .ppf-card .nm{font-size:15px;font-weight:700;color:#1E293B;margin-bottom:4px}
-                        #page-projectportfolio .ppf-card .meta{font-size:12px;color:#64748B;margin-bottom:10px}
-                        #page-projectportfolio .ppf-card .cap{font-size:18px;font-weight:700;color:#1E293B;margin-bottom:10px}
-                        #page-projectportfolio .ppf-empty{grid-column:1/-1;text-align:center;padding:40px;color:#94A3B8;font-size:13px}
-                        #page-projectportfolio .badge-success{background:rgba(34,197,94,.12);color:#16A34A}
-                        #page-projectportfolio .badge-info{background:rgba(29,57,255,.12);color:#1D39FF}
-                        #page-projectportfolio .badge-warning{background:rgba(245,158,11,.12);color:#D97706}
-                        #page-projectportfolio .badge-gray{background:#F1F5F9;color:#64748B}
+                        #page-projectportfolio .ppf-card .nm{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px}
+                        #page-projectportfolio .ppf-card .meta{font-size:12px;color:var(--text-secondary);margin-bottom:10px}
+                        #page-projectportfolio .ppf-card .cap{font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:10px}
+                        #page-projectportfolio .ppf-empty{grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:13px}
                         @media(max-width:900px){#page-projectportfolio .ppf-kpis{grid-template-columns:1fr}}
                     </style>
                     <div class="page-header"><h1 class="page-title" data-i18n="projectPortfolio">محفظة المشاريع</h1><p class="page-subtitle" data-i18n="projectPortfolioSubtitle">نظرة شاملة على مشاريع الطاقة والقدرة الإنتاجية</p></div>
@@ -1109,7 +1111,7 @@
             if (['kitchen','gm','admin'].includes(currentUser.role)) { await loadKitchenModule(); }
             if (['secretary','gm','admin'].includes(currentUser.role)) { await loadSecretaryModule(); }
             if (['accountant','gm','admin'].includes(currentUser.role)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
-            if (['hr','gm','admin'].includes(currentUser.role)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); }
+            if (['hr','gm','admin'].includes(currentUser.role)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); renderAttendanceSummary(); renderHRSummary(); }
             if (['gm','admin'].includes(currentUser.role)) await loadActivityLog();
             await loadRequestsModule();
             if (USERS_PAGE_ROLES.includes(currentUser.role)) await loadUsersModule();
@@ -1529,7 +1531,7 @@
                 await loadTickets(); if (['gm','admin'].includes(r)) { await loadEquipment(); }
                 if (['electrical_engineer','gm','admin'].includes(r)) { await loadProducts(); await loadSuppliers(); await loadStockMovements(); }
                 if (['accountant','gm','admin'].includes(r)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
-                if (['hr','gm','admin'].includes(r)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); }
+                if (['hr','gm','admin'].includes(r)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); renderAttendanceSummary(); renderHRSummary(); }
                 if (['gm','admin'].includes(r)) await loadActivityLog();
                 if (typeof loadRequestsModule === 'function') await loadRequestsModule();
                 if (typeof loadNotifications === 'function') await loadNotifications();
@@ -3106,6 +3108,78 @@ async function renderProjectPortfolio(){
         async function deleteSupplier(id) { if (!confirm(t('confirmDelete'))) return; const sup = data.suppliers.find(s => s.id === id); const { error } = await supabaseClient.from('suppliers').delete().eq('id', id); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Suppliers', 'delete', sup?.name || id); await loadSuppliers(); showToast('success', t('dataDeleted'), ''); }
         async function saveStockMovement() { const movement = {id: generateId(), productId: document.getElementById('stockProduct').value, type: document.getElementById('stockType').value, quantity: parseInt(document.getElementById('stockQuantity').value), notes: document.getElementById('stockNotes').value, date: new Date().toISOString()}; const product = data.products.find(p => p.id === movement.productId); if (!product) { showToast('error', 'Error', t('noData')); return; } let newStock = product.stock; if (movement.type === 'in') newStock += movement.quantity; else if (movement.type === 'out') newStock -= movement.quantity; else if (movement.type === 'adjustment') newStock = movement.quantity; const { error: e1 } = await supabaseClient.from('stock_movements').insert(movement); if (e1) { showToast('error', 'Error', e1.message); return; } const { error: e2 } = await supabaseClient.from('products').update({ stock: newStock }).eq('id', product.id); if (e2) { showToast('error', 'Error', e2.message); return; } logActivity('Stock', 'create', `Stock ${movement.type} - ${product.name}`); await loadStockMovements(); await loadProducts(); closeModal('stockModal'); showToast('success', t('dataSaved'), ''); }
         function renderStockMovements() { const tbody = document.getElementById('stockMovementsTableBody'); if (data.stockMovements.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } tbody.innerHTML = data.stockMovements.map(m => { const product = data.products.find(p => p.id === m.productId); return `<tr><td>${formatDate(m.date)}</td><td>${esc(product?.name || 'Unknown')}</td><td><span class="badge ${m.type === 'in' ? 'badge-success' : m.type === 'out' ? 'badge-danger' : 'badge-info'}">${t(m.type)}</span></td><td>${m.quantity}</td><td>${esc(m.notes || '-')}</td></tr>`; }).join(''); }
+        function _hrTimeToMin(t){ if(!t) return null; var p=String(t).split(':'); var h=parseInt(p[0],10); var m=parseInt(p[1],10); if(isNaN(h)||isNaN(m)) return null; return h*60+m; }
+        function computeAttendanceSummary(employeeId, monthStr){
+            var STANDARD_HOURS=8, STANDARD_START_MIN=480;
+            var recs = (data.attendance||[]).filter(function(a){ return a.employeeId===employeeId && String(a.date||'').slice(0,7)===monthStr && a.checkIn && a.checkOut; });
+            var totalHours=0, overtimeHours=0, lateDays=0;
+            recs.forEach(function(a){
+                var inMin=_hrTimeToMin(a.checkIn), outMin=_hrTimeToMin(a.checkOut);
+                if(inMin==null||outMin==null) return;
+                var hrs=(outMin-inMin)/60; if(hrs<0) hrs+=24;
+                totalHours+=hrs;
+                if(hrs>STANDARD_HOURS) overtimeHours += (hrs-STANDARD_HOURS);
+                if(inMin>STANDARD_START_MIN) lateDays++;
+            });
+            return { daysPresent: recs.length, totalHours: totalHours, overtimeHours: overtimeHours, lateDays: lateDays };
+        }
+        function renderAttendanceSummary(){
+            var monthInput = document.getElementById('attSummaryMonth');
+            if(!monthInput) return;
+            if(!monthInput.value){ var d=new Date(); monthInput.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+            var monthStr = monthInput.value;
+            var tbody = document.getElementById('attSummaryBody');
+            if(!tbody) return;
+            var emps = (data.employees||[]).filter(function(e){ return (e.status||'active')==='active'; });
+            if(emps.length===0){ tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px">'+t('noData')+'</td></tr>'; return; }
+            tbody.innerHTML = emps.map(function(e){
+                var sm = computeAttendanceSummary(e.id, monthStr);
+                var lateBadge = sm.lateDays>0 ? '<span class="badge badge-warning">'+sm.lateDays+'</span>' : '0';
+                return '<tr><td>'+esc(e.name||'-')+'</td><td>'+sm.daysPresent+'</td><td>'+sm.totalHours.toFixed(1)+'</td><td>'+sm.overtimeHours.toFixed(1)+'</td><td>'+lateBadge+'</td></tr>';
+            }).join('');
+        }
+        function renderHRSummary(){
+            var totalEl = document.getElementById('hrSumTotal');
+            var pendingEl = document.getElementById('hrSumPending');
+            var onLeaveEl = document.getElementById('hrSumOnLeave');
+            if(!totalEl) return;
+            var activeEmps = (data.employees||[]).filter(function(e){ return (e.status||'active')==='active'; });
+            totalEl.textContent = String(activeEmps.length);
+            var _rq = (typeof allRequestsCache!=='undefined' && allRequestsCache) ? allRequestsCache : [];
+            var pendingLeaves = _rq.filter(function(r){ return r.type==='leave' && r.status==='pending'; }).length;
+            if(pendingEl) pendingEl.textContent = String(pendingLeaves);
+            var todayStr = new Date().toISOString().slice(0,10);
+            var onLeave = (data.leaves||[]).filter(function(l){ return l.status==='approved' && l.fromDate && l.toDate && l.fromDate<=todayStr && l.toDate>=todayStr; }).length;
+            if(onLeaveEl) onLeaveEl.textContent = String(onLeave);
+        }
+        async function generateMonthlyPayroll(){
+            var monthInput = document.getElementById('payrollGenMonth');
+            if(!monthInput || !monthInput.value){ showToast('warning','اختر الشهر أولاً',''); return; }
+            var monthStr = monthInput.value;
+            var emps = (data.employees||[]).filter(function(e){ return (e.status||'active')==='active'; });
+            var existing = {};
+            (data.payroll||[]).forEach(function(p){ if(p.month===monthStr) existing[p.employeeId]=true; });
+            var toCreate = emps.filter(function(e){ return !existing[e.id]; });
+            if(toCreate.length===0){ showToast('info','لا يوجد موظفون جدد','كل الموظفين النشطين عندهم راتب مسجّل بالفعل لهذا الشهر'); return; }
+            if(!confirm('هيتم توليد '+toCreate.length+' كشف راتب لشهر '+monthStr+'. تقدر تراجع وتعدّل كل واحد بعدها. متابعة؟')) return;
+            var created=0;
+            for(var i=0;i<toCreate.length;i++){
+                var e = toCreate[i];
+                var sm = computeAttendanceSummary(e.id, monthStr);
+                var basic = parseFloat(e.salary)||0;
+                var hourlyRate = basic>0 ? basic/176 : 0;
+                var overtimePay = Math.round(sm.overtimeHours * hourlyRate * 1.5);
+                var gross = basic + overtimePay;
+                var payload = { id: generateId(), employeeId: e.id, month: monthStr, basic: basic, allowances: 0, overtime: overtimePay, insurance: 0, tax: 0, deductions: 0, net: gross, createdAt: new Date().toISOString() };
+                try{
+                    var res = await supabaseClient.from('payroll').insert(payload);
+                    if(!res.error) created++;
+                }catch(err){ console.error('generateMonthlyPayroll', err); }
+            }
+            showToast('success', 'تم توليد '+created+' كشف راتب', 'راجع كل كشف وعدّل البدلات أو الخصومات لو محتاج قبل الاعتماد النهائي');
+            await loadPayroll();
+        }
+        
         async function saveEmployee() { const id = document.getElementById('employeeId').value || generateId(); const isNew = !document.getElementById('employeeId').value; const employee = {id: id, empId: document.getElementById('empId').value, name: document.getElementById('empName').value, position: document.getElementById('empPosition').value, department: document.getElementById('empDepartment').value, phone: document.getElementById('empPhone').value, email: document.getElementById('empEmail').value, hireDate: document.getElementById('empHireDate').value, salary: parseFloat(document.getElementById('empSalary').value) || 0, annualLeave: parseFloat(document.getElementById('empAnnualLeave').value) || 21, status: document.getElementById('empStatus').value, createdAt: isNew ? new Date().toISOString() : (data.employees.find(e => e.id === id)?.createdAt || new Date().toISOString())}; const { error } = await supabaseClient.from('employees').upsert(employee); if (error) { showToast('error', 'Error', error.message); return; } logActivity('HR', isNew ? 'create' : 'update', employee.name); await loadEmployees(); closeModal('employeeModal'); showToast('success', t('dataSaved'), employee.name); }
         function showDetailsModal(title, rows){ document.getElementById('detailsViewTitle').textContent = title; var body = rows.filter(function(r){ return r && r.length>=2; }).map(function(r){ var v = (r[1]==null || r[1]==='') ? '-' : r[1]; return '<div style="display:flex;gap:12px;padding:9px 0;border-bottom:0.5px solid var(--border-color);"><div style="width:130px;color:var(--text-muted);font-size:13px;flex-shrink:0;">'+r[0]+'</div><div style="flex:1;font-size:14px;line-height:1.6;word-break:break-word;">'+v+'</div></div>'; }).join(''); document.getElementById('detailsViewBody').innerHTML = body; openModal('detailsViewModal'); }
         function viewEmployee(id){ var emp = data.employees.find(function(e){ return e.id === id; }); if(!emp) return; var st = emp.status || 'active'; showDetailsModal('بيانات الموظف', [ ['الرقم الوظيفي', esc(emp.empId||'-')], ['الاسم', esc(emp.name||'-')], ['المنصب', esc(emp.position||'-')], ['القسم', esc(emp.department||'-')], ['الهاتف', esc(emp.phone||'-')], ['البريد', esc(emp.email||'-')], ['تاريخ التعيين', emp.hireDate ? formatDate(emp.hireDate) : '-'], ['الراتب', emp.salary != null ? formatCurrency(emp.salary) : '-'], ['الإجازة السنوية', (emp.annualLeave != null ? emp.annualLeave : 21) + ' يوم'], ['الحالة', t('status' + st.charAt(0).toUpperCase() + st.slice(1))] ]); }
