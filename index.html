@@ -1154,6 +1154,7 @@
             applyRoleVisibility();
             updateUserMenu();
             initApp();
+            updateUserMenu();
             updateHeaderDate(); showWelcomeGreeting();
             await loadTickets(); if (['gm','admin'].includes(currentUser.role)) { await loadEquipment(); }
             if (['electrical_engineer','gm','admin'].includes(currentUser.role)) { await loadProducts(); await loadSuppliers(); await loadStockMovements(); }
@@ -1566,7 +1567,7 @@
         const win=window.open('','_blank'); win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>${title}</title><style>body{font-family:Arial,sans-serif;padding:30px;direction:rtl;}table{border-collapse:collapse;width:100%;}th,td{padding:8px 12px;font-size:13px;border:1px solid #ccc;text-align:right;}th{background:#f0f0f0;}tr:nth-child(even){background:#fafafa;}.footer{margin-top:30px;font-size:11px;color:#999;text-align:center;}@media print{button{display:none!important;}}</style></head><body><h2>${title}</h2><p style="color:#666;">${esc(company)} — ${now}</p>${tableHTML}<div class="footer">تم الإنشاء بواسطة نظام ${esc(company)}</div><br><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer;">🖨️ طباعة / حفظ PDF</button></body></html>`); win.document.close(); }
         function formatDateTime(date){ const d = new Date(date); if (isNaN(d.getTime())) return ''; const day = String(d.getDate()).padStart(2,'0'); const month = String(d.getMonth()+1).padStart(2,'0'); const year = d.getFullYear(); let h = d.getHours(); const mi = String(d.getMinutes()).padStart(2,'0'); const ap = h >= 12 ? 'م' : 'ص'; h = h % 12; if (h === 0) h = 12; return `${day}/${month}/${year} - ${String(h).padStart(2,'0')}:${mi} ${ap}`; }
         function formatDate(date, format = 'DD/MM/YYYY') { const d = new Date(date); const day = String(d.getDate()).padStart(2, '0'); const month = String(d.getMonth() + 1).padStart(2, '0'); const year = d.getFullYear(); if (format === 'MM/DD/YYYY') return `${month}/${day}/${year}`; if (format === 'YYYY-MM-DD') return `${year}-${month}-${day}`; return `${day}/${month}/${year}`; }
-        function formatCurrency(amount) {             const currencySymbols = {'SDG': 'ج.س', 'SAR': 'ر.س', 'USD': '$', 'EUR': '€', 'AED': 'د.إ', 'EGP': 'ج.م'}; const symbol = currencySymbols[data.settings.currency] || data.settings.currency; return `${parseFloat(amount).toLocaleString()} ${symbol}`; }
+        function formatCurrency(amount) { const lang = (data.settings && data.settings.language) || 'ar'; const currencySymbols = lang==='en' ? {'SDG': 'SDG', 'SAR': 'SAR', 'USD': '$', 'EUR': '€', 'AED': 'AED', 'EGP': 'EGP'} : {'SDG': 'ج.س', 'SAR': 'ر.س', 'USD': '$', 'EUR': '€', 'AED': 'د.إ', 'EGP': 'ج.م'}; const symbol = currencySymbols[data.settings.currency] || data.settings.currency; return `${parseFloat(amount).toLocaleString()} ${symbol}`; }
         function t(key) { return translations[data.settings.language][key] || key; }
         function translatePage() { document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (translations[data.settings.language][key]) el.textContent = translations[data.settings.language][key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.getAttribute('data-i18n-placeholder'); if (translations[data.settings.language][key]) el.placeholder = translations[data.settings.language][key]; }); }
         async function logActivity(module, action, itemName) { try { await supabaseClient.from('activity_log').insert({ id: generateId(), timestamp: new Date().toISOString(), module: module, action: action, itemName: itemName, actor: currentUser?.full_name || 'Unknown' }); } catch (e) { console.warn('logActivity:', e); } if (['gm','admin'].includes(currentUser?.role)) await loadActivityLog(); }
@@ -3021,11 +3022,12 @@ async function renderProjectPortfolio(){
         }
                 // ===== اللوحة التنفيذية — المرحلة 2: المؤشرات من البيانات الحقيقية =====
         function exdMoney(n){
-            const cs={'SDG':'ج.س','SAR':'ر.س','USD':'$','EUR':'€','AED':'د.إ','EGP':'ج.م'};
+            const lang=(data.settings && data.settings.language)||'ar';
+            const cs= lang==='en' ? {'SDG':'SDG','SAR':'SAR','USD':'$','EUR':'€','AED':'AED','EGP':'EGP'} : {'SDG':'ج.س','SAR':'ر.س','USD':'$','EUR':'€','AED':'د.إ','EGP':'ج.م'};
             const sym=cs[data.settings.currency]||data.settings.currency;
             n=Number(n)||0; const a=Math.abs(n); let v;
-            if(a>=1e9) v=(n/1e9).toFixed(2)+' مليار';
-            else if(a>=1e6) v=(n/1e6).toFixed(1)+' مليون';
+            if(a>=1e9) v=(n/1e9).toFixed(2)+(lang==='en'?'B':' مليار');
+            else if(a>=1e6) v=(n/1e6).toFixed(1)+(lang==='en'?'M':' مليون');
             else v=Math.round(n).toLocaleString();
             return v+' '+sym;
         }
@@ -3300,10 +3302,10 @@ async function renderProjectPortfolio(){
         document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', function() { const tabName = this.dataset.tab; this.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); this.closest('.content-area, .page').querySelectorAll('.tab-content').forEach(content => content.style.display = 'none'); document.getElementById(`tab-${tabName}`).style.display = 'block'; }); });
         document.querySelectorAll('.nav-item').forEach(item => { item.addEventListener('click', function() { navigateTo(this.dataset.page); }); });
         document.getElementById('menuToggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('open'); });
-        document.querySelectorAll('.lang-btn').forEach(btn => { btn.addEventListener('click', function() { document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); data.settings.language = this.dataset.lang; document.documentElement.lang = data.settings.language; document.documentElement.dir = data.settings.language === 'ar' ? 'rtl' : 'ltr'; translatePage(); updateHeaderDate(); saveData(); }); });
+        document.querySelectorAll('.lang-btn').forEach(btn => { btn.addEventListener('click', function() { document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); data.settings.language = this.dataset.lang; document.documentElement.lang = data.settings.language; document.documentElement.dir = data.settings.language === 'ar' ? 'rtl' : 'ltr'; translatePage(); updateHeaderDate(); if (typeof updateUserMenu === 'function') updateUserMenu(); saveData(); }); });
         document.getElementById('themeToggle').addEventListener('click', function() { data.settings.theme = data.settings.theme === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', data.settings.theme); this.innerHTML = data.settings.theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>'; saveData(); });
         document.getElementById('themeSelect').addEventListener('change', function() { data.settings.theme = this.value; document.documentElement.setAttribute('data-theme', data.settings.theme); document.getElementById('themeToggle').innerHTML = data.settings.theme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>'; saveData(); });
-        document.getElementById('languageSelect').addEventListener('change', function() { data.settings.language = this.value; document.documentElement.lang = data.settings.language; document.documentElement.dir = data.settings.language === 'ar' ? 'rtl' : 'ltr'; translatePage(); updateHeaderDate(); saveData(); });
+        document.getElementById('languageSelect').addEventListener('change', function() { data.settings.language = this.value; document.documentElement.lang = data.settings.language; document.documentElement.dir = data.settings.language === 'ar' ? 'rtl' : 'ltr'; translatePage(); updateHeaderDate(); if (typeof updateUserMenu === 'function') updateUserMenu(); saveData(); });
         document.getElementById('currencySelect').addEventListener('change', function() { data.settings.currency = this.value; saveData(); });
         document.getElementById('dateFormatSelect').addEventListener('change', function() { data.settings.dateFormat = this.value; saveData(); });
         document.getElementById('companyForm').addEventListener('submit', function(e) { e.preventDefault(); data.settings.companyName = document.getElementById('companyName').value; saveData(); showToast('success', t('dataSaved'), ''); });
