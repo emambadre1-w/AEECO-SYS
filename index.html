@@ -953,11 +953,15 @@
                         <div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="printPriceCatalog()"><i class="fas fa-print"></i> طباعة</button><button class="btn btn-primary" onclick="openPriceCatalogItemModal()"><i class="fas fa-plus"></i><span data-i18n="addItem">إضافة صنف</span></button></div>
                     </div>
                     <div class="pc-rate-card">
-                        <div><div class="lbl">سعر الصرف الحالي (١ دولار =)</div><div class="val" id="pcRateDisplay">— جنيه</div></div>
-                        <button class="btn btn-sm btn-secondary" onclick="openExchangeRateModal()"><i class="fas fa-edit"></i> تعديل السعر</button>
+                        <div style="display:flex;gap:28px;flex-wrap:wrap">
+                            <div><div class="lbl">سعر الصرف (١ دولار =)</div><div class="val" id="pcRateDisplay">— جنيه</div></div>
+                            <div><div class="lbl">نسبة التسويق</div><div class="val" id="pcMarketingDisplay">—٪</div></div>
+                            <div><div class="lbl">نسبة الربح</div><div class="val" id="pcProfitDisplay">—٪</div></div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="openExchangeRateModal()"><i class="fas fa-edit"></i> تعديل الإعدادات</button>
                     </div>
                     <div class="card"><div class="card-body"><div class="table-container"><table>
-                        <thead><tr><th>الصنف</th><th>الكود</th><th>الوحدة</th><th>السعر المدخل</th><th>بالدولار</th><th>بالجنيه</th><th></th></tr></thead>
+                        <thead><tr><th>الصنف</th><th>الوضع</th><th>الكمية</th><th>التكلفة الكلية</th><th>سعر البيع (إجمالي)</th><th>سعر بيع الوحدة</th><th></th></tr></thead>
                         <tbody id="pcItemsBody"></tbody>
                         <tfoot><tr style="font-weight:800;background:var(--bg-tertiary)"><td colspan="4">الإجمالي</td><td id="pcTotalUsd">$0</td><td id="pcTotalSdg">0 ج.س</td><td></td></tr></tfoot>
                     </table></div></div></div>
@@ -991,12 +995,21 @@
 <input type="hidden" id="pcItemId">
 <div class="form-group"><label class="form-label">اسم الصنف</label><input type="text" class="form-input" id="pcItemName" required></div>
 <div class="form-row"><div class="form-group"><label class="form-label">كود الصنف (اختياري)</label><input type="text" class="form-input" id="pcItemCode"></div><div class="form-group"><label class="form-label">الوحدة</label><input type="text" class="form-input" id="pcItemUnit" placeholder="مثال: قطعة، متر، كرتون"></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">العملة</label><select class="form-select" id="pcItemCurrency"><option value="USD">دولار أمريكي</option><option value="SDG">جنيه سوداني</option></select></div><div class="form-group"><label class="form-label">السعر</label><input type="number" class="form-input" id="pcItemPrice" min="0" step="0.01" required></div></div>
+<div class="form-group"><label class="form-label">طريقة التسعير</label><select class="form-select" id="pcItemMode" onchange="pcToggleModeFields()"><option value="simple">بسيط (سعر واحد مباشر)</option><option value="import">استيراد (تكلفة وصول + هامش ربح)</option></select></div>
+<div id="pcSimpleFields">
+<div class="form-row"><div class="form-group"><label class="form-label">العملة</label><select class="form-select" id="pcItemCurrency"><option value="USD">دولار أمريكي</option><option value="SDG">جنيه سوداني</option></select></div><div class="form-group"><label class="form-label">السعر</label><input type="number" class="form-input" id="pcItemPrice" min="0" step="0.01"></div></div>
+</div>
+<div id="pcImportFields" style="display:none">
+<div class="form-row"><div class="form-group"><label class="form-label">الكمية</label><input type="number" class="form-input" id="pcItemQty" min="0.01" step="1" value="1"></div><div class="form-group"><label class="form-label">تكلفة الوحدة (دولار)</label><input type="number" class="form-input" id="pcItemUnitCost" min="0" step="0.01"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">الجمارك (دولار)</label><input type="number" class="form-input" id="pcItemCustoms" min="0" step="0.01" value="0"></div><div class="form-group"><label class="form-label">مصاريف الميناء (دولار)</label><input type="number" class="form-input" id="pcItemPort" min="0" step="0.01" value="0"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">النقل (دولار)</label><input type="number" class="form-input" id="pcItemTransport" min="0" step="0.01" value="0"></div><div class="form-group"><label class="form-label">مرجع الشحنة (اختياري)</label><input type="text" class="form-input" id="pcItemShipmentRef"></div></div>
+</div>
 <div class="form-group"><label class="form-label">ملاحظات (اختياري)</label><textarea class="form-textarea" id="pcItemNotes"></textarea></div>
 </div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('priceCatalogItemModal')">إلغاء</button><button class="btn btn-primary" onclick="savePriceCatalogItem()">حفظ</button></div></div></div>
-<div class="modal-overlay" id="exchangeRateModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">تعديل سعر الصرف</h3><button class="modal-close" onclick="closeModal('exchangeRateModal')">&times;</button></div><div class="modal-body">
+<div class="modal-overlay" id="exchangeRateModal"><div class="modal"><div class="modal-header"><h3 class="modal-title">إعدادات التسعير</h3><button class="modal-close" onclick="closeModal('exchangeRateModal')">&times;</button></div><div class="modal-body">
 <div class="form-group"><label class="form-label">١ دولار أمريكي = كم جنيه سوداني؟</label><input type="number" class="form-input" id="exchangeRateInput" min="0.01" step="0.01" required></div>
-<p style="font-size:12px;color:var(--text-muted)">ملاحظة: تعديل السعر لن يغيّر أسعار الأصناف المُضافة سابقاً — كل صنف يحتفظ بسعر الصرف وقت إضافته.</p>
+<div class="form-row"><div class="form-group"><label class="form-label">نسبة التسويق ٪ (من التكلفة الواصلة)</label><input type="number" class="form-input" id="pcMarketingPctInput" min="0" step="0.1" required></div><div class="form-group"><label class="form-label">نسبة الربح ٪ (من إجمالي التكلفة)</label><input type="number" class="form-input" id="pcProfitPctInput" min="0" step="0.1" required></div></div>
+<p style="font-size:12px;color:var(--text-muted)">ملاحظة: هذه الإعدادات تُطبَّق فوراً على كل الأصناف — القديمة والجديدة.</p>
 </div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('exchangeRateModal')">إلغاء</button><button class="btn btn-primary" onclick="saveExchangeRate()">حفظ</button></div></div></div>
 <!-- PM Modals -->
     <div class="modal-overlay" id="pmProjectModal"><div class="modal"><div class="modal-header"><h3 class="modal-title" data-i18n="newProject">مشروع جديد</h3><button class="modal-close" onclick="closeModal('pmProjectModal')">&times;</button></div><div class="modal-body"><form id="pmProjectForm"><input type="hidden" id="pmProjId"><div class="form-group"><label class="form-label">اسم المشروع</label><input type="text" class="form-input" id="pmProjName" required></div><div class="form-group"><label class="form-label">الوصف</label><textarea class="form-textarea" id="pmProjDesc"></textarea></div><div class="form-row"><div class="form-group"><label class="form-label">نوع المشروع</label><select class="form-select" id="pmProjType"><option value="">-</option><option value="solar">شمسي</option><option value="thermal">حراري</option><option value="wind">رياح</option><option value="hydrogen">هيدروجين</option><option value="transmission">نقل وتوزيع</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label">القدرة (ميجاواط)</label><input type="number" class="form-input" id="pmProjCapacity" min="0" step="0.1"></div></div><div class="form-group"><label class="form-label">الموقع</label><input type="text" class="form-input" id="pmProjLocation" placeholder="مثال: بورتسودان"></div><div class="form-row"><div class="form-group"><label class="form-label">الحالة</label><select class="form-select" id="pmProjStatus"><option value="planning">تخطيط</option><option value="active">نشط</option><option value="on_hold">متوقف</option><option value="completed">مكتمل</option><option value="cancelled">ملغى</option></select></div><div class="form-group"><label class="form-label">الأولوية</label><select class="form-select" id="pmProjPriority"><option value="low">منخفضة</option><option value="medium" selected>متوسطة</option><option value="high">عالية</option><option value="critical">حرجة</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">تاريخ البداية</label><input type="date" class="form-input" id="pmProjStart"></div><div class="form-group"><label class="form-label">تاريخ الانتهاء</label><input type="date" class="form-input" id="pmProjEnd"></div></div><div class="form-row"><div class="form-group"><label class="form-label">الميزانية</label><input type="number" class="form-input" id="pmProjBudget" min="0"></div><div class="form-group"><label class="form-label">العميل</label><input type="text" class="form-input" id="pmProjClient"></div></div><div class="form-group"><label class="form-label">نسبة الإنجاز %</label><input type="range" class="form-input" id="pmProjProgress" min="0" max="100" value="0" oninput="document.getElementById('pmProjProgressVal').textContent=this.value+'%'"><span id="pmProjProgressVal" style="font-weight:700;color:var(--primary);">0%</span></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('pmProjectModal')">إلغاء</button><button class="btn btn-primary" onclick="savePMProject()" id="pmProjSaveBtn">حفظ</button></div></div></div>
@@ -2772,16 +2785,18 @@ async function renderProjectPortfolio(){
                 }).join('');
             }catch(e){ console.error('renderProjectPortfolio', e); }
         }
-        
-let priceCatalogItems = [];
-        let priceCatalogRate = 600;
         async function loadPriceCatalogModule(){
             try{
                 const { data: rateRow } = await supabaseClient.from('price_catalog_settings').select('*').eq('id',1).maybeSingle();
-                if(rateRow && rateRow.usd_to_sdg_rate) priceCatalogRate = Number(rateRow.usd_to_sdg_rate);
+                if(rateRow){
+                    if(rateRow.usd_to_sdg_rate) priceCatalogRate = Number(rateRow.usd_to_sdg_rate);
+                    if(rateRow.marketing_pct!=null) priceCatalogMarketingPct = Number(rateRow.marketing_pct);
+                    if(rateRow.profit_pct!=null) priceCatalogProfitPct = Number(rateRow.profit_pct);
+                }
             }catch(e){ console.error('loadPriceCatalogModule rate', e); }
-            var rd = document.getElementById('pcRateDisplay');
-            if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' جنيه';
+            var rd = document.getElementById('pcRateDisplay'); if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' جنيه';
+            var md = document.getElementById('pcMarketingDisplay'); if(md) md.textContent = priceCatalogMarketingPct+'٪';
+            var pd = document.getElementById('pcProfitDisplay'); if(pd) pd.textContent = priceCatalogProfitPct+'٪';
             try{
                 const { data: items, error } = await supabaseClient.from('item_price_catalog').select('*').order('created_at',{ascending:false});
                 if(error) throw error;
@@ -2789,17 +2804,40 @@ let priceCatalogItems = [];
             }catch(e){ console.error('loadPriceCatalogModule items', e); priceCatalogItems = []; }
             renderPriceCatalogTable();
         }
-        function pcLiveConvert(item){
+        let priceCatalogItems = [];
+        let priceCatalogRate = 600;
+        let priceCatalogMarketingPct = 3;
+        let priceCatalogProfitPct = 15;
+        function pcCalcItem(item){
+            if(item.pricing_mode==='import'){
+                var qty = Number(item.quantity)||0;
+                var unitCost = Number(item.unit_price)||0;
+                var itemsCost = qty*unitCost;
+                var landed = itemsCost + (Number(item.customs_usd)||0) + (Number(item.port_fees_usd)||0) + (Number(item.transport_usd)||0);
+                var marketing = landed * priceCatalogMarketingPct/100;
+                var totalCost = landed + marketing;
+                var profit = totalCost * priceCatalogProfitPct/100;
+                var sellingUsd = totalCost + profit;
+                var sellingSdg = sellingUsd * priceCatalogRate;
+                var unitUsd = qty>0 ? sellingUsd/qty : 0;
+                var unitSdg = qty>0 ? sellingSdg/qty : 0;
+                return { qty: qty, totalCost: totalCost, sellingUsd: sellingUsd, sellingSdg: sellingSdg, unitUsd: unitUsd, unitSdg: unitSdg };
+            }
             var usd, sdg;
-            if(item.price_currency==='USD'){ usd = Number(item.unit_price)||0; sdg = usd * priceCatalogRate; }
+            if(item.price_currency==='USD'){ usd = Number(item.unit_price)||0; sdg = usd*priceCatalogRate; }
             else { sdg = Number(item.unit_price)||0; usd = priceCatalogRate>0 ? sdg/priceCatalogRate : 0; }
-            return { usd: usd, sdg: sdg };
+            return { qty:1, totalCost: usd, sellingUsd: usd, sellingSdg: sdg, unitUsd: usd, unitSdg: sdg };
+        }
+        function pcToggleModeFields(){
+            var mode = document.getElementById('pcItemMode').value;
+            document.getElementById('pcSimpleFields').style.display = mode==='simple' ? 'block' : 'none';
+            document.getElementById('pcImportFields').style.display = mode==='import' ? 'block' : 'none';
         }
         function renderPriceCatalogTable(){
             var tbody = document.getElementById('pcItemsBody');
             if(!tbody) return;
             var totalUsd = 0, totalSdg = 0;
-            priceCatalogItems.forEach(function(it){ var c = pcLiveConvert(it); totalUsd += c.usd; totalSdg += c.sdg; });
+            priceCatalogItems.forEach(function(it){ var c = pcCalcItem(it); totalUsd += c.sellingUsd; totalSdg += c.sellingSdg; });
             var elU = document.getElementById('pcTotalUsd'); if(elU) elU.textContent = '$'+totalUsd.toLocaleString(undefined,{maximumFractionDigits:2});
             var elS = document.getElementById('pcTotalSdg'); if(elS) elS.textContent = totalSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س';
             if(priceCatalogItems.length===0){
@@ -2807,33 +2845,18 @@ let priceCatalogItems = [];
                 return;
             }
             tbody.innerHTML = priceCatalogItems.map(function(it){
-                var conv = pcLiveConvert(it);
-                var curBadge = it.price_currency==='USD' ? '<span class="badge badge-usd">$</span>' : '<span class="badge badge-sdg">ج.س</span>';
+                var c = pcCalcItem(it);
+                var modeLabel = it.pricing_mode==='import' ? '<span class="badge badge-info">استيراد</span>' : '<span class="badge badge-gray">بسيط</span>';
                 return '<tr>'
                     +'<td>'+esc(it.item_name||'-')+'</td>'
-                    +'<td>'+esc(it.item_code||'-')+'</td>'
-                    +'<td>'+esc(it.unit||'-')+'</td>'
-                    +'<td>'+curBadge+' '+Number(it.unit_price).toLocaleString()+'</td>'
-                    +'<td>$'+conv.usd.toLocaleString(undefined,{maximumFractionDigits:2})+'</td>'
-                    +'<td>'+conv.sdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td>'
+                    +'<td>'+modeLabel+'</td>'
+                    +'<td>'+(it.pricing_mode==='import' ? c.qty : '-')+'</td>'
+                    +'<td>'+(it.pricing_mode==='import' ? '$'+c.totalCost.toLocaleString(undefined,{maximumFractionDigits:2}) : '-')+'</td>'
+                    +'<td>$'+c.sellingUsd.toLocaleString(undefined,{maximumFractionDigits:2})+' / '+c.sellingSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td>'
+                    +'<td>$'+c.unitUsd.toLocaleString(undefined,{maximumFractionDigits:2})+' / '+c.unitSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td>'
                     +'<td><button class="btn btn-sm btn-secondary" onclick="openPriceCatalogItemModal(\''+it.id+'\')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deletePriceCatalogItem(\''+it.id+'\')"><i class="fas fa-trash"></i></button></td>'
                     +'</tr>';
             }).join('');
-        }
-        function printPriceCatalog(){
-            const company = 'شركة الوطنية للطاقة والهندسة المحدودة';
-            const now = new Date().toLocaleDateString('ar-EG');
-            const logo = AEECO_INVOICE_LOGO;
-            const rowsHtml = priceCatalogItems.map(function(it){
-                var curLabel = it.price_currency==='USD' ? 'دولار' : 'جنيه'; var conv = pcLiveConvert(it);
-                return '<tr><td>'+esc(it.item_name||'-')+'</td><td>'+esc(it.item_code||'-')+'</td><td>'+esc(it.unit||'-')+'</td><td>'+Number(it.unit_price).toLocaleString()+' '+curLabel+'</td><td>$'+conv.usd.toLocaleString(undefined,{maximumFractionDigits:2})+'</td><td>'+conv.sdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td></tr>';
-            }).join('');
-            const totalUsd = priceCatalogItems.reduce(function(sum,it){ return sum + pcLiveConvert(it).usd; }, 0);
-            const totalSdg = priceCatalogItems.reduce(function(sum,it){ return sum + pcLiveConvert(it).sdg; }, 0);
-            const totalRow = '<tr style="font-weight:bold;background:#f2f2f2"><td colspan="4">الإجمالي</td><td>$'+totalUsd.toLocaleString(undefined,{maximumFractionDigits:2})+'</td><td>'+totalSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td></tr>';
-            const win = window.open('', '_blank');
-            win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>كتالوج الأسعار</title><style>${_prPrintCSS()} th{width:auto;text-align:center}td{text-align:center}</style></head><body><div class="head"><img src="${logo}"><div class="doc">كتالوج الأسعار</div></div><p style="font-size:12px;color:#666;margin:0 0 10px">سعر الصرف المستخدم: 1$ = ${priceCatalogRate.toLocaleString()} جنيه</p><table><thead><tr><th>الصنف</th><th>الكود</th><th>الوحدة</th><th>السعر المدخل</th><th>بالدولار</th><th>بالجنيه</th></tr></thead><tbody>${rowsHtml}${totalRow}</tbody></table><div class="footer">طُبع من نظام ${esc(company)} — ${now}</div><br><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button></body></html>`);
-            win.document.close();
         }
         function openPriceCatalogItemModal(id){
             document.getElementById('pcItemId').value = id || '';
@@ -2844,32 +2867,64 @@ let priceCatalogItems = [];
                 document.getElementById('pcItemName').value = it.item_name||'';
                 document.getElementById('pcItemCode').value = it.item_code||'';
                 document.getElementById('pcItemUnit').value = it.unit||'';
+                document.getElementById('pcItemMode').value = it.pricing_mode||'simple';
                 document.getElementById('pcItemCurrency').value = it.price_currency||'USD';
                 document.getElementById('pcItemPrice').value = it.unit_price!=null ? it.unit_price : '';
+                document.getElementById('pcItemQty').value = it.quantity!=null ? it.quantity : 1;
+                document.getElementById('pcItemUnitCost').value = it.unit_price!=null ? it.unit_price : '';
+                document.getElementById('pcItemCustoms').value = it.customs_usd!=null ? it.customs_usd : 0;
+                document.getElementById('pcItemPort').value = it.port_fees_usd!=null ? it.port_fees_usd : 0;
+                document.getElementById('pcItemTransport').value = it.transport_usd!=null ? it.transport_usd : 0;
+                document.getElementById('pcItemShipmentRef').value = it.shipment_ref||'';
                 document.getElementById('pcItemNotes').value = it.notes||'';
             } else {
                 document.getElementById('pcItemModalTitle').textContent = 'إضافة صنف';
                 document.getElementById('pcItemName').value = '';
                 document.getElementById('pcItemCode').value = '';
                 document.getElementById('pcItemUnit').value = '';
+                document.getElementById('pcItemMode').value = 'simple';
                 document.getElementById('pcItemCurrency').value = 'USD';
                 document.getElementById('pcItemPrice').value = '';
+                document.getElementById('pcItemQty').value = 1;
+                document.getElementById('pcItemUnitCost').value = '';
+                document.getElementById('pcItemCustoms').value = 0;
+                document.getElementById('pcItemPort').value = 0;
+                document.getElementById('pcItemTransport').value = 0;
+                document.getElementById('pcItemShipmentRef').value = '';
                 document.getElementById('pcItemNotes').value = '';
             }
+            pcToggleModeFields();
             openModal('priceCatalogItemModal');
         }
         async function savePriceCatalogItem(){
             var id = document.getElementById('pcItemId').value;
             var name = document.getElementById('pcItemName').value.trim();
             if(!name){ showToast('warning','اسم الصنف مطلوب',''); return; }
+            var mode = document.getElementById('pcItemMode').value;
             var payload = {
                 item_name: name,
                 item_code: document.getElementById('pcItemCode').value.trim() || null,
                 unit: document.getElementById('pcItemUnit').value.trim() || null,
-                price_currency: document.getElementById('pcItemCurrency').value,
-                unit_price: parseFloat(document.getElementById('pcItemPrice').value) || 0,
+                pricing_mode: mode,
                 notes: document.getElementById('pcItemNotes').value.trim() || null
             };
+            if(mode==='import'){
+                payload.price_currency = 'USD';
+                payload.unit_price = parseFloat(document.getElementById('pcItemUnitCost').value) || 0;
+                payload.quantity = parseFloat(document.getElementById('pcItemQty').value) || 1;
+                payload.customs_usd = parseFloat(document.getElementById('pcItemCustoms').value) || 0;
+                payload.port_fees_usd = parseFloat(document.getElementById('pcItemPort').value) || 0;
+                payload.transport_usd = parseFloat(document.getElementById('pcItemTransport').value) || 0;
+                payload.shipment_ref = document.getElementById('pcItemShipmentRef').value.trim() || null;
+            } else {
+                payload.price_currency = document.getElementById('pcItemCurrency').value;
+                payload.unit_price = parseFloat(document.getElementById('pcItemPrice').value) || 0;
+                payload.quantity = 1;
+                payload.customs_usd = 0;
+                payload.port_fees_usd = 0;
+                payload.transport_usd = 0;
+                payload.shipment_ref = null;
+            }
             try{
                 if(id){
                     const { error } = await supabaseClient.from('item_price_catalog').update(payload).eq('id', id);
@@ -2903,25 +2958,51 @@ let priceCatalogItems = [];
         }
         function openExchangeRateModal(){
             document.getElementById('exchangeRateInput').value = priceCatalogRate;
+            document.getElementById('pcMarketingPctInput').value = priceCatalogMarketingPct;
+            document.getElementById('pcProfitPctInput').value = priceCatalogProfitPct;
             openModal('exchangeRateModal');
         }
         async function saveExchangeRate(){
             var rate = parseFloat(document.getElementById('exchangeRateInput').value);
+            var mkt = parseFloat(document.getElementById('pcMarketingPctInput').value);
+            var prof = parseFloat(document.getElementById('pcProfitPctInput').value);
             if(!rate || rate<=0){ showToast('warning','أدخل سعر صرف صحيح',''); return; }
+            if(isNaN(mkt) || mkt<0 || isNaN(prof) || prof<0){ showToast('warning','أدخل نسب صحيحة',''); return; }
             try{
-                const { error } = await supabaseClient.from('price_catalog_settings').update({usd_to_sdg_rate: rate, updated_by: currentUser.id}).eq('id',1);
+                const { error } = await supabaseClient.from('price_catalog_settings').update({usd_to_sdg_rate: rate, marketing_pct: mkt, profit_pct: prof, updated_by: currentUser.id}).eq('id',1);
                 if(error) throw error;
                 priceCatalogRate = rate;
+                priceCatalogMarketingPct = mkt;
+                priceCatalogProfitPct = prof;
                 closeModal('exchangeRateModal');
-                showToast('success','تم تحديث سعر الصرف','كل الأصناف (القديمة والجديدة) تحدّثت فوراً بالسعر الجديد');
-                var rd = document.getElementById('pcRateDisplay');
-                if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' جنيه';
+                showToast('success','تم تحديث الإعدادات','كل الأصناف تحدّثت فوراً بالإعدادات الجديدة');
+                var rd = document.getElementById('pcRateDisplay'); if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' جنيه';
+                var md = document.getElementById('pcMarketingDisplay'); if(md) md.textContent = priceCatalogMarketingPct+'٪';
+                var pd = document.getElementById('pcProfitDisplay'); if(pd) pd.textContent = priceCatalogProfitPct+'٪';
                 renderPriceCatalogTable();
             }catch(e){
                 console.error('saveExchangeRate', e);
                 showToast('error','تعذّر الحفظ', String((e&&e.message)||e));
             }
         }
+        
+        function printPriceCatalog(){
+            const company = 'شركة الوطنية للطاقة والهندسة المحدودة';
+            const now = new Date().toLocaleDateString('ar-EG');
+            const logo = AEECO_INVOICE_LOGO;
+            const rowsHtml = priceCatalogItems.map(function(it){
+                var c = pcCalcItem(it);
+                var modeLabel = it.pricing_mode==='import' ? 'استيراد' : 'بسيط';
+                return '<tr><td>'+esc(it.item_name||'-')+'</td><td>'+esc(it.item_code||'-')+'</td><td>'+modeLabel+'</td><td>'+(it.pricing_mode==='import'?c.qty:'-')+'</td><td>$'+c.sellingUsd.toLocaleString(undefined,{maximumFractionDigits:2})+'</td><td>'+c.sellingSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td><td>'+c.unitSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td></tr>';
+            }).join('');
+            const totalUsd = priceCatalogItems.reduce(function(sum,it){ return sum + pcCalcItem(it).sellingUsd; }, 0);
+            const totalSdg = priceCatalogItems.reduce(function(sum,it){ return sum + pcCalcItem(it).sellingSdg; }, 0);
+            const totalRow = '<tr style="font-weight:bold;background:#f2f2f2"><td colspan="4">الإجمالي</td><td>$'+totalUsd.toLocaleString(undefined,{maximumFractionDigits:2})+'</td><td>'+totalSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td><td></td></tr>';
+            const win = window.open('', '_blank');
+            win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>كتالوج الأسعار</title><style>${_prPrintCSS()} th{width:auto;text-align:center}td{text-align:center}</style></head><body><div class="head"><img src="${logo}"><div class="doc">كتالوج الأسعار</div></div><p style="font-size:12px;color:#666;margin:0 0 10px">سعر الصرف: 1$ = ${priceCatalogRate.toLocaleString()} جنيه | تسويق: ${priceCatalogMarketingPct}٪ | ربح: ${priceCatalogProfitPct}٪</p><table><thead><tr><th>الصنف</th><th>الكود</th><th>الوضع</th><th>الكمية</th><th>سعر البيع (دولار)</th><th>سعر البيع (جنيه)</th><th>سعر الوحدة (جنيه)</th></tr></thead><tbody>${rowsHtml}${totalRow}</tbody></table><div class="footer">طُبع من نظام ${esc(company)} — ${now}</div><br><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button></body></html>`);
+            win.document.close();
+        }
+        
         
         function navigateTo(page) {
             const allowed = ROLE_PAGES[currentUser?.role] || ['requests'];
