@@ -1190,7 +1190,7 @@
             if (['electrical_engineer','gm','admin'].includes(currentUser.role)) { await loadProducts(); await loadSuppliers(); await loadStockMovements(); }
             if (['kitchen','gm','admin'].includes(currentUser.role)) { await loadKitchenModule(); }
             if (['secretary','gm','admin'].includes(currentUser.role)) { await loadSecretaryModule(); }
-            if (['accountant','gm','admin'].includes(currentUser.role)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
+            if (['accountant','financial_manager','internal_auditor','gm','admin'].includes(currentUser.role)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
             if (['hr','gm','admin'].includes(currentUser.role)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); renderAttendanceSummary(); renderHRSummary(); }
             if (['gm','admin'].includes(currentUser.role)) await loadActivityLog();
             await loadRequestsModule();
@@ -1237,7 +1237,7 @@
         function updateUserMenu() { document.getElementById('currentUserName').textContent = currentUser.full_name || '-'; const roleKey = 'role' + currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1); document.getElementById('currentUserRole').textContent = t(roleKey); document.getElementById('currentUserAvatar').textContent = (currentUser.full_name || '?').trim().charAt(0).toUpperCase(); }
         async function checkSession() { const _isRecovery = (window.location.hash || '').indexOf('type=recovery') !== -1; if (!initSupabase()) { showAuthError(t('configMissing')); return; } registerPasswordRecovery(); const { data: sessionData } = await supabaseClient.auth.getSession(); if (_isRecovery) { showNewPasswordForm(); return; } if (sessionData.session) await onAuthSuccess(); }
         // ===================== Employee Requests Module =====================
-        function toggleAmountField() { const type = document.getElementById('reqType').value; const showAmount = type === 'expense' || type === 'purchase' || type === 'financial_certification'; document.getElementById('reqAmountGroup').classList.toggle('app-hidden', !showAmount); const fc = document.getElementById('reqFinCertGroup'); if(fc) fc.classList.toggle('app-hidden', type !== 'financial_certification'); const dcb = document.getElementById('reqDirectCertBtn'); if(dcb) dcb.classList.toggle('app-hidden', type !== 'financial_certification'); renderStagePreview(type); }
+        function toggleAmountField() { const type = document.getElementById('reqType').value; const showAmount = type === 'expense' || type === 'purchase' || type === 'financial_certification'; document.getElementById('reqAmountGroup').classList.toggle('app-hidden', !showAmount); const fc = document.getElementById('reqFinCertGroup'); if(fc) fc.classList.toggle('app-hidden', type !== 'financial_certification'); const dcb = document.getElementById('reqDirectCertBtn'); if(dcb) dcb.classList.toggle('app-hidden', !(type === 'financial_certification' && currentUser && ['gm','admin'].includes(currentUser.role))); renderStagePreview(type); }
         function renderStagePreview(type) { const stages = REQUEST_ROUTES[type] || []; document.getElementById('reqStagePreview').innerHTML = stages.map(s => `<span class="stage-pill">${t('role' + s.charAt(0).toUpperCase() + s.slice(1))}</span>`).join('<i class="fas fa-angle-left" style="font-size:10px;color:var(--text-muted);"></i>'); }
         let _editReqId = null;
         function openNewRequestModal() { _editReqId = null; document.getElementById('newRequestForm').reset(); var _rt=document.getElementById('reqType'); if(_rt) _rt.disabled=false; var _mt=document.querySelector('#newRequestModal .modal-title'); if(_mt) _mt.textContent='طلب جديد'; var _bt=document.getElementById('reqSubmitBtn'); if(_bt) _bt.textContent='إرسال الطلب'; toggleAmountField(); openModal('newRequestModal'); }
@@ -1250,6 +1250,7 @@
             } catch (e) { console.error('notifyApproverEmail', e); }
         }
         async function submitAndCertifyNow(){
+            if (!currentUser || !['gm','admin'].includes(currentUser.role)) { showToast('error', t('accessDenied'), t('accessDeniedMsg')); return; }
             const title = document.getElementById('reqTitle').value.trim();
             const description = document.getElementById('reqDescription').value.trim();
             const amount = document.getElementById('reqAmount').value;
@@ -1312,7 +1313,7 @@
             var stageRows = stages.map(function(st){
                 var entry = hist.find(function(h){ return h.stage===st; });
                 var sigCell = (entry && entry.decision==='approved')
-                    ? '<img src="'+getOfficialSignature(st)+'" style="max-height:60px;max-width:160px;display:block;margin:0 auto">'
+                    ? (entry.signature_url ? '<img src="'+entry.signature_url+'" style="max-height:60px;max-width:160px;display:block;margin:0 auto">' : '<div style="height:60px;border-bottom:1px dotted #999;margin:0 20px"></div>')
                     : (entry ? '<span style="font-size:12px;color:#999">(مرفوض)</span>' : '<div style="height:60px;border-bottom:1px dotted #999;margin:0 20px"></div>');
                 var nameCell = entry ? esc(entry.approver_name) + (entry.decision!=='approved' ? ' (مرفوض)' : '') : '..........................';
                 var dt = entry ? formatDate(entry.at) : '............';
@@ -1432,7 +1433,7 @@
                 if (hist) {
                     if (hist.decision === 'approved') {
                         cls = 'done'; icon = 'fa-check';
-                        var _sigThumb = (req.type==='financial_certification' && getOfficialSignature(stage)) ? `<img src="${getOfficialSignature(stage)}" style="max-height:34px;vertical-align:middle;margin-inline-end:6px">` : '';
+                        var _sigThumb = (req.type==='financial_certification' && hist.signature_url) ? `<img src="${hist.signature_url}" style="max-height:34px;vertical-align:middle;margin-inline-end:6px">` : '';
                         detail = `<div class="req-step-detail">${_sigThumb}وافق عليه: <strong>${hist.approver_name || '-'}</strong></div><div class="req-step-time">${formatDateTime(hist.at)}</div>`;
                     } else {
                         cls = 'rejected'; icon = 'fa-times';
@@ -1796,7 +1797,7 @@
             try {
                 await loadTickets(); if (['gm','admin'].includes(r)) { await loadEquipment(); }
                 if (['electrical_engineer','gm','admin'].includes(r)) { await loadProducts(); await loadSuppliers(); await loadStockMovements(); }
-                if (['accountant','gm','admin'].includes(r)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
+                if (['accountant','financial_manager','internal_auditor','gm','admin'].includes(r)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
                 if (['hr','gm','admin'].includes(r)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); renderAttendanceSummary(); renderHRSummary(); }
                 if (['gm','admin'].includes(r)) await loadActivityLog();
                 if (typeof loadRequestsModule === 'function') await loadRequestsModule();
