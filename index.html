@@ -1314,7 +1314,7 @@
             var stageRows = stages.map(function(st){
                 var entry = hist.find(function(h){ return h.stage===st; });
                 var sigCell = (entry && entry.decision==='approved')
-                    ? (entry.signature_url ? '<img src="'+entry.signature_url+'" style="max-height:60px;max-width:160px;display:block;margin:0 auto">' : '<div style="height:60px;border-bottom:1px dotted #999;margin:0 20px"></div>')
+                    ? '<img src="'+(entry.signature_url || getOfficialSignature(st))+'" style="max-height:60px;max-width:160px;display:block;margin:0 auto">'
                     : (entry ? '<span style="font-size:12px;color:#999">(مرفوض)</span>' : '<div style="height:60px;border-bottom:1px dotted #999;margin:0 20px"></div>');
                 var nameCell = entry ? esc(entry.approver_name) + (entry.decision!=='approved' ? ' (مرفوض)' : '') : '..........................';
                 var dt = entry ? formatDate(entry.at) : '............';
@@ -1434,7 +1434,7 @@
                 if (hist) {
                     if (hist.decision === 'approved') {
                         cls = 'done'; icon = 'fa-check';
-                        var _sigThumb = (req.type==='financial_certification' && hist.signature_url) ? `<img src="${hist.signature_url}" style="max-height:34px;vertical-align:middle;margin-inline-end:6px">` : '';
+                        var _sigThumb = (req.type==='financial_certification') ? `<img src="${hist.signature_url || getOfficialSignature(stage)}" style="max-height:34px;vertical-align:middle;margin-inline-end:6px">` : '';
                         detail = `<div class="req-step-detail">${_sigThumb}وافق عليه: <strong>${hist.approver_name || '-'}</strong></div><div class="req-step-time">${formatDateTime(hist.at)}</div>`;
                     } else {
                         cls = 'rejected'; icon = 'fa-times';
@@ -1989,14 +1989,17 @@
             if (editId) { ({ error } = await supabaseClient.from('kitchen_items').update(payload).eq('id', editId)); }
             else { ({ error } = await supabaseClient.from('kitchen_items').insert(payload)); }
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Kitchen', editId ? 'update' : 'create', name);
             showToast('success', 'تم الحفظ', '');
             closeModal('kitchenItemModal');
             await loadKitchenItems();
         }
         async function deleteKitchenItem(id) {
             if (!confirm('هل أنت متأكد من حذف هذا الصنف؟ (لن تتأثر سجلات الحركة السابقة) — لا يمكن التراجع.')) return;
+            const _kiItem = kitchenData.items.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('kitchen_items').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Kitchen', 'delete', _kiItem ? _kiItem.name : id);
             showToast('success', 'تم الحذف', '');
             await loadKitchenItems();
         }
@@ -2023,6 +2026,7 @@
             const { error } = await supabaseClient.from('kitchen_stock_movements').insert(payload);
             if (error) { showToast('error', 'Error', error.message); return; }
             const it = kitchenData.items.find(x => String(x.id) === String(itemId));
+            logActivity('Kitchen', 'create', (it ? it.name : '') + ' — ' + (type === 'in' ? 'إدخال' : 'إخراج'));
             if (it) {
                 const newQty = (parseFloat(it.quantity) || 0) + (type === 'in' ? qty : -qty);
                 await supabaseClient.from('kitchen_items').update({ quantity: newQty }).eq('id', itemId);
@@ -2089,14 +2093,17 @@
             if (editId) { ({ error } = await supabaseClient.from('kitchen_expenses').update(payload).eq('id', editId)); }
             else { ({ error } = await supabaseClient.from('kitchen_expenses').insert(payload)); }
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Kitchen', editId ? 'update' : 'create', desc);
             showToast('success', 'تم الحفظ', '');
             closeModal('kitchenExpenseModal');
             await loadKitchenExpenses();
         }
         async function deleteKitchenExpense(id) {
             if (!confirm('هل أنت متأكد من حذف هذا المصروف؟ لا يمكن التراجع.')) return;
+            const _keItem = kitchenData.expenses.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('kitchen_expenses').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Kitchen', 'delete', _keItem ? _keItem.description : id);
             showToast('success', 'تم الحذف', '');
             await loadKitchenExpenses();
         }
@@ -2197,14 +2204,17 @@
             else { ({ error } = await supabaseClient.from('kitchen_invoices').insert(payload)); }
             btn.disabled = false;
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Kitchen', editId ? 'update' : 'create', payload.number);
             closeModal('kitchenInvoiceModal');
             showToast('success', 'تم حفظ الفاتورة', payload.number);
             await loadKitchenInvoices();
         }
         async function deleteKitchenInvoice(id) {
             if (!confirm('هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع.')) return;
+            const _kinvItem = kitchenData.invoices.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('kitchen_invoices').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Kitchen', 'delete', _kinvItem ? _kinvItem.number : id);
             showToast('success', 'تم الحذف', '');
             await loadKitchenInvoices();
         }
@@ -2286,14 +2296,17 @@
             else { ({ error } = await supabaseClient.from('kitchen_bank_notifications').insert(payload)); }
             btn.disabled = false;
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Kitchen', editId ? 'update' : 'create', payload.bank_name);
             closeModal('kitchenBankModal');
             showToast('success', 'تم حفظ الإشعار', '');
             await loadKitchenBank();
         }
         async function deleteKitchenBank(id) {
             if (!confirm('هل أنت متأكد من حذف هذا الإشعار؟ لا يمكن التراجع.')) return;
+            const _kbItem = kitchenData.bank.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('kitchen_bank_notifications').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Kitchen', 'delete', _kbItem ? _kbItem.bank_name : id);
             showToast('success', 'تم الحذف', '');
             await loadKitchenBank();
         }
@@ -2472,14 +2485,17 @@
             else { ({ error } = await supabaseClient.from('secretary_correspondence').insert(payload)); }
             btn.disabled = false;
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Secretary', editId ? 'update' : 'create', payload.subject);
             closeModal('correspondenceModal');
             showToast('success', 'تم حفظ الخطاب', '');
             await loadSecretaryCorrespondence();
         }
         async function deleteCorrespondence(id) {
             if (!confirm('هل أنت متأكد من حذف هذا الخطاب؟ لا يمكن التراجع.')) return;
+            const _corrItem = secretaryData.correspondence.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('secretary_correspondence').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Secretary', 'delete', _corrItem ? _corrItem.subject : id);
             showToast('success', 'تم الحذف', '');
             await loadSecretaryCorrespondence();
         }
@@ -2550,14 +2566,17 @@
             if (editId) { ({ error } = await supabaseClient.from('secretary_appointments').update(payload).eq('id', editId)); }
             else { ({ error } = await supabaseClient.from('secretary_appointments').insert(payload)); }
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Secretary', editId ? 'update' : 'create', title);
             closeModal('appointmentModal');
             showToast('success', 'تم حفظ الموعد', '');
             await loadSecretaryAppointments();
         }
         async function deleteAppointment(id) {
             if (!confirm('هل أنت متأكد من حذف هذا الموعد؟ لا يمكن التراجع.')) return;
+            const _apptItem = secretaryData.appointments.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('secretary_appointments').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
+            logActivity('Secretary', 'delete', _apptItem ? _apptItem.title : id);
             showToast('success', 'تم الحذف', '');
             await loadSecretaryAppointments();
         }
