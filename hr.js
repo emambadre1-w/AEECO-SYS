@@ -596,7 +596,69 @@
             _pendingOffboardEmployee = null;
             await persistEmployee(employee, false);
         }
-        function viewEmployee(id){ var emp = data.employees.find(function(e){ return e.id === id; }); if(!emp) return; var st = emp.status || 'active'; var ctType = emp.contractType || 'permanent'; var ctLabels = { permanent: t('contractPermanent'), probation: t('contractProbation'), fixedTerm: t('contractFixedTerm') }; showDetailsModal('بيانات الموظف', [ ['الرقم الوظيفي', esc(emp.empId||'-')], ['الاسم', esc(emp.name||'-')], ['المنصب', esc(emp.position||'-')], ['القسم', esc(emp.department||'-')], ['الهاتف', esc(emp.phone||'-')], ['البريد', esc(emp.email||'-')], ['تاريخ التعيين', emp.hireDate ? formatDate(emp.hireDate) : '-'], ['الراتب', emp.salary != null ? formatCurrency(emp.salary) : '-'], ['الإجازة السنوية', (emp.annualLeave != null ? emp.annualLeave : 21) + ' يوم'], ['الحالة', t('status' + st.charAt(0).toUpperCase() + st.slice(1))], ['نوع العقد', esc(ctLabels[ctType])], ['تاريخ انتهاء العقد', (ctType !== 'permanent' && emp.contractEndDate) ? formatDate(emp.contractEndDate) : '-'] ]); }
+        function viewEmployee(id){
+            var emp = data.employees.find(function(e){ return e.id === id; });
+            if(!emp) return;
+            var st = emp.status || 'active';
+            var stBadge = { active: 'badge-success', onLeave: 'badge-warning', terminated: 'badge-gray' };
+            var ctType = emp.contractType || 'permanent';
+            var parts = (emp.name||'').trim().split(/\s+/);
+            var initials = ((parts[0]||'').charAt(0) + (parts.length>1 ? (parts[parts.length-1]||'').charAt(0) : '')) || '؟';
+            var mgrName = emp.managerId ? ((data.employees.find(function(e){ return e.id===emp.managerId; })||{}).name || null) : null;
+            var warnHtml = '';
+            if (ctType !== 'permanent' && emp.contractEndDate && st === 'active') {
+                var days = Math.ceil((new Date(emp.contractEndDate) - new Date()) / 86400000);
+                if (days < 0) warnHtml = '<div style="background:rgba(239,68,68,.12);border-inline-start:3px solid #EF4444;color:#EF4444;padding:10px 14px;border-radius:8px;margin:0 0 14px;font-size:13px;font-weight:600;"><i class="fas fa-triangle-exclamation"></i> العقد منتهي منذ '+Math.abs(days)+' يوم — يحتاج قرار تجديد أو إنهاء خدمة</div>';
+                else if (days <= 30) warnHtml = '<div style="background:rgba(245,158,11,.14);border-inline-start:3px solid #F59E0B;color:#B45309;padding:10px 14px;border-radius:8px;margin:0 0 14px;font-size:13px;font-weight:600;"><i class="fas fa-clock"></i> العقد ينتهي خلال '+days+' يوم — '+formatDate(emp.contractEndDate)+'</div>';
+            }
+            function secTitle(icon, txt){ return '<div style="margin:16px 0 4px;font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.4px;"><i class="fas '+icon+'" style="margin-inline-end:6px;color:#0B6E4F;"></i>'+txt+'</div>'; }
+            function row(icon, label, valueHtml){ return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border-color);"><i class="fas '+icon+'" style="width:18px;color:var(--text-muted);text-align:center;flex-shrink:0;"></i><div style="width:120px;color:var(--text-muted);font-size:13px;flex-shrink:0;">'+label+'</div><div style="flex:1;font-size:14px;word-break:break-word;">'+(valueHtml||'-')+'</div></div>'; }
+            var ctLabels = { permanent: t('contractPermanent'), probation: t('contractProbation'), fixedTerm: t('contractFixedTerm') };
+            var phoneHtml = emp.phone ? '<a href="tel:'+esc(emp.phone)+'" style="color:#0B6E4F;text-decoration:none;font-weight:600;">'+esc(emp.phone)+' <i class="fas fa-phone" style="font-size:11px;"></i></a>' : '-';
+            var emailHtml = emp.email ? '<a href="mailto:'+esc(emp.email)+'" style="color:#0B6E4F;text-decoration:none;font-weight:600;">'+esc(emp.email)+' <i class="fas fa-envelope" style="font-size:11px;"></i></a>' : '-';
+            var emergHtml = (emp.emergencyContactName || emp.emergencyContactPhone) ? (esc(emp.emergencyContactName||'') + (emp.emergencyContactPhone ? ' — <a href="tel:'+esc(emp.emergencyContactPhone)+'" style="color:#0B6E4F;text-decoration:none;">'+esc(emp.emergencyContactPhone)+'</a>' : '')) : '-';
+            var html =
+                '<div style="display:flex;align-items:center;gap:14px;padding:2px 0 14px;">'
+                + '<div style="width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#0B6E4F,#16A37A);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0;">'+esc(initials)+'</div>'
+                + '<div style="min-width:0;">'
+                +   '<div style="font-size:18px;font-weight:700;">'+esc(emp.name||'-')+'</div>'
+                +   '<div style="font-size:13px;color:var(--text-muted);">'+esc(emp.position||'-')+' — '+esc(emp.department||'-')+' <span style="opacity:.7;">| #'+esc(emp.empId||'-')+'</span></div>'
+                +   '<div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;"><span class="badge '+(stBadge[st]||'badge-gray')+'">'+t('status'+st.charAt(0).toUpperCase()+st.slice(1))+'</span>'+contractBadgeHtml(emp)+'</div>'
+                + '</div></div>'
+                + warnHtml
+                + secTitle('fa-address-book','الاتصال')
+                + row('fa-phone','الهاتف', phoneHtml)
+                + row('fa-envelope','البريد', emailHtml)
+                + secTitle('fa-briefcase','البيانات الوظيفية')
+                + row('fa-calendar','تاريخ التعيين', emp.hireDate ? formatDate(emp.hireDate) : '-')
+                + row('fa-money-bill-wave','الراتب', emp.salary != null ? formatCurrency(emp.salary) : '-')
+                + row('fa-plane-departure','الإجازة السنوية', (emp.annualLeave != null ? emp.annualLeave : 21) + ' يوم')
+                + row('fa-user-tie','المدير المباشر', mgrName ? esc(mgrName) : '-')
+                + row('fa-file-signature','نوع العقد', esc(ctLabels[ctType]) + ((ctType !== 'permanent' && emp.contractEndDate) ? ' — حتى '+formatDate(emp.contractEndDate) : ''))
+                + secTitle('fa-id-card','بيانات إضافية')
+                + row('fa-id-badge','الرقم الوطني', emp.nationalId ? esc(emp.nationalId) : '-')
+                + row('fa-building-columns','الحساب البنكي', emp.bankAccount ? esc(emp.bankAccount) : '-')
+                + row('fa-truck-medical','جهة اتصال الطوارئ', emergHtml)
+                + secTitle('fa-folder-open','المستندات')
+                + '<div id="empViewDocs" style="padding:6px 0;font-size:12px;color:var(--text-muted);">جارٍ التحميل...</div>'
+                + '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn btn-primary" onclick="closeModal(\'detailsViewModal\');editEmployee(\''+emp.id+'\')"><i class="fas fa-edit"></i> تعديل البيانات</button></div>';
+            document.getElementById('detailsViewTitle').textContent = 'بيانات الموظف';
+            document.getElementById('detailsViewBody').innerHTML = html;
+            openModal('detailsViewModal');
+            (async function(){
+                var box = document.getElementById('empViewDocs');
+                if(!box) return;
+                try {
+                    var res = await supabaseClient.from('employee_documents').select('*').eq('employee_id', emp.id).order('uploaded_at', {ascending:false});
+                    var docs = res.data || [];
+                    if(!docs.length){ box.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">لا توجد مستندات مرفوعة</span>'; return; }
+                    box.innerHTML = docs.map(function(d){
+                        var url = supabaseClient.storage.from('employee-documents').getPublicUrl(d.file_path).data.publicUrl;
+                        return '<a href="'+url+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;font-size:13px;text-decoration:none;color:var(--text-primary);margin:0 0 6px 6px;"><i class="fas fa-file-lines" style="color:#0B6E4F;"></i>'+esc(d.name)+'</a>';
+                    }).join('');
+                } catch(e){ box.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">تعذّر تحميل المستندات</span>'; }
+            })();
+        }
         function viewLeave(id){ var r=(data.leaves||[]).find(function(x){return x.id===id;}); if(!r) return; var emp=(data.employees||[]).find(function(x){return x.id===r.employeeId;}); showDetailsModal('تفاصيل الإجازة', [['الموظف',esc(emp?emp.name:(r.employeeId||'-'))],['النوع',esc(r.type||'-')],['من',r.fromDate?formatDate(r.fromDate):'-'],['إلى',r.toDate?formatDate(r.toDate):'-'],['الحالة',esc(r.status||'-')]]); }
         function contractBadgeHtml(emp) {
             const ct = emp.contractType || 'permanent';
