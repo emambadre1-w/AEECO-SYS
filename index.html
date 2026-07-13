@@ -379,7 +379,7 @@
                 <div class="page" id="page-activity">
                     <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div><h1 class="page-title" data-i18n="activityLog">سجل التغييرات</h1><p class="page-subtitle" data-i18n="activityLogSubtitle">جميع التغييرات في النظام</p></div>
-                        <button class="btn btn-secondary" onclick="exportActivityLog()"><i class="fas fa-download"></i><span data-i18n="exportLog">تصدير السجل</span></button>
+                        <div style="display:flex;gap:8px;"><button class="btn btn-danger app-hidden" id="btnClearActivityLog" onclick="clearActivityLog()"><i class="fas fa-trash-can"></i><span data-i18n="clearLog">مسح السجل</span></button><button class="btn btn-secondary" onclick="exportActivityLog()"><i class="fas fa-download"></i><span data-i18n="exportLog">تصدير السجل</span></button></div>
                     </div>
                     <div class="card"><div class="card-body"><div id="activityLogList"></div></div></div>
                 </div>
