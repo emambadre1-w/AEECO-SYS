@@ -219,7 +219,7 @@ async function renderProjectPortfolio(){
             const pageEl = document.getElementById(`page-${page}`);
             const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
             if (pageEl) pageEl.classList.add('active');
-            if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard(); if (page === 'execdash') { _exdInitFilters().then(renderExecDashboard); } if (page === 'projectportfolio') renderProjectPortfolio(); if (page === 'pricecatalog') loadPriceCatalogModule(); if (page === 'settings') renderMySignaturePreview(); if (page === 'myhr') loadMyHRInfo();
+            if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard(); if (page === 'execdash') { _exdInitFilters().then(renderExecDashboard); } if (page === 'projectportfolio') renderProjectPortfolio(); if (page === 'pricecatalog') loadPriceCatalogModule(); if (page === 'settings') renderMySignaturePreview(); if (page === 'myhr') loadMyHRInfo(); if (page === 'hr') { renderHRSummary(); renderAttendanceSummary(); }
             remindSectionGuide(page);
             try { localStorage.setItem('aeeco_last_page', page); } catch (e) {}
             document.getElementById('sidebar').classList.remove('open');
