@@ -108,7 +108,7 @@
             var btn = document.getElementById('fullBackupBtn');
             var origHtml = btn ? btn.innerHTML : '';
             if (btn) btn.disabled = true;
-            var TABLES = ['accounts','activity_log','attendance','employee_requests','employees','equipment','invoices','kitchen_bank_notifications','kitchen_expenses','kitchen_invoices','kitchen_items','kitchen_stock_movements','leaves','notifications','payroll','pm_milestones','pm_notes','pm_projects','pm_risks','pm_tasks','pr_bank_notifications','pr_communications','pr_contacts','pr_invoices','pr_meetings','pr_tasks','products','profiles','secretary_appointments','secretary_correspondence','stock_movements','suppliers','tickets','transactions'];
+            var TABLES = ['accounts','activity_log','attendance','employee_documents','employee_requests','employees','equipment','invoices','item_price_catalog','kitchen_bank_notifications','kitchen_expenses','kitchen_invoices','kitchen_items','kitchen_stock_movements','leaves','notifications','payroll','pm_milestones','pm_notes','pm_projects','pm_risks','pm_tasks','pr_bank_notifications','pr_communications','pr_contacts','pr_invoices','pr_meetings','price_catalog_settings','pr_tasks','products','profiles','secretary_appointments','secretary_correspondence','stock_movements','suppliers','tickets','transactions'];
             var wb = XLSX.utils.book_new();
             var okCount = 0, emptyCount = 0, failCount = 0, failedTables = [];
             for (var i=0; i<TABLES.length; i++){

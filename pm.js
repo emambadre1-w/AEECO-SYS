@@ -48,6 +48,28 @@
             if (all || type === 'pr') addSheet('جهات العلاقات العامة', ((typeof prData !== 'undefined' && prData.contacts) || []).map(c => ({ 'الاسم': c.name, 'المؤسسة': c.organization || '', 'الهاتف': c.phone || '', 'البريد': c.email || '' })));
             if (all || type === 'pm') addSheet('المشاريع', ((typeof pmProjects !== 'undefined' && pmProjects) || []).map(p => ({ 'المشروع': p.name, 'العميل': p.client, 'الحالة': p.status, 'الإنجاز': p.progress, 'تاريخ الانتهاء': p.end_date })));
             if ((all || type === 'activity') && currentUser && ['gm','admin'].includes(currentUser.role)) addSheet('سجل النشاط', (data.activityLog || []).map(a => ({ 'القسم': a.module, 'الإجراء': a.action, 'العنصر': a.itemName, 'المستخدم': a.actor, 'التاريخ': a.timestamp })));
+            if (all) {
+                addSheet('المعدات', (data.equipment || []).map(e => ({ 'رقم الأصل': e.assetId, 'الاسم': e.name, 'الفئة': e.category, 'مخصصة لـ': e.assignedTo || '', 'الموقع': e.location || '', 'الحالة': e.status })));
+                const kd = (typeof kitchenData !== 'undefined' && kitchenData) || {};
+                addSheet('المطبخ-الأصناف', (kd.items || []).map(i => ({ 'الصنف': i.name, 'الوحدة': i.unit || '', 'الكمية': i.quantity, 'حد التنبيه': i.min_quantity || '' })));
+                addSheet('المطبخ-الحركة', (kd.movements || []).map(m => ({ 'الصنف': ((kd.items||[]).find(x => x.id === m.item_id) || {}).name || '', 'النوع': m.movement_type, 'الكمية': m.quantity, 'التاريخ': m.movement_date })));
+                addSheet('المطبخ-المصروفات', (kd.expenses || []).map(x => ({ 'الوصف': x.description, 'المبلغ': x.amount, 'التاريخ': x.expense_date })));
+                addSheet('المطبخ-الفواتير', (kd.invoices || []).map(v => ({ 'الرقم': v.invoice_number || '', 'المورد': v.supplier_name || '', 'المبلغ': v.amount, 'الحالة': v.status || '', 'التاريخ': v.date })));
+                addSheet('المطبخ-إشعارات بنكية', (kd.bank || []).map(b => ({ 'الوصف': b.description || '', 'المبلغ': b.amount, 'التاريخ': b.date })));
+                const sd = (typeof secretaryData !== 'undefined' && secretaryData) || {};
+                addSheet('السكرتارية-الخطابات', (sd.correspondence || []).map(c => ({ 'الرقم': c.ref_number || '', 'الاتجاه': c.direction === 'incoming' ? 'وارد' : 'صادر', 'الجهة': c.party || '', 'الموضوع': c.subject || '', 'التاريخ': c.corr_date })));
+                addSheet('السكرتارية-المواعيد', (sd.appointments || []).map(a => ({ 'العنوان': a.title, 'مع': a.with_party || '', 'التاريخ': a.appt_date, 'الوقت': a.appt_time || '', 'الحالة': a.status || '' })));
+                const pd = (typeof prData !== 'undefined' && prData) || {};
+                addSheet('ع.عامة-التواصل', (pd.communications || []).map(c => ({ 'الجهة': ((pd.contacts||[]).find(x => x.id === c.contact_id) || {}).name || c.party || '', 'النوع': c.type || '', 'الموضوع': c.subject || '', 'التاريخ': c.date })));
+                addSheet('ع.عامة-الاجتماعات', (pd.meetings || []).map(m => ({ 'العنوان': m.title, 'مع': m.with_party || '', 'التاريخ': m.date, 'الحالة': m.status || '' })));
+                addSheet('ع.عامة-المهام', (pd.tasks || []).map(k => ({ 'المهمة': k.title, 'الحالة': k.status || '', 'الاستحقاق': k.due_date || '' })));
+                addSheet('ع.عامة-الفواتير', (pd.invoices || []).map(v => ({ 'الرقم': v.invoice_number || '', 'الجهة': v.party || '', 'المبلغ': v.amount, 'الحالة': v.status || '', 'التاريخ': v.date })));
+                addSheet('ع.عامة-إشعارات بنكية', (pd.bank || []).map(b => ({ 'الوصف': b.description || '', 'المبلغ': b.amount, 'التاريخ': b.date })));
+                addSheet('المشاريع-المهام', ((typeof pmTasks !== 'undefined' && pmTasks) || []).map(k => ({ 'المشروع': (((typeof pmProjects !== 'undefined' && pmProjects) || []).find(p => p.id === k.project_id) || {}).name || '', 'المهمة': k.title, 'الحالة': k.status, 'البداية': k.start_date || '', 'الاستحقاق': k.due_date || '' })));
+                addSheet('المشاريع-المعالم', ((typeof pmMilestones !== 'undefined' && pmMilestones) || []).map(m => ({ 'المشروع': (((typeof pmProjects !== 'undefined' && pmProjects) || []).find(p => p.id === m.project_id) || {}).name || '', 'المعلم': m.title, 'الاستحقاق': m.due_date || '', 'مكتمل': m.completed ? 'نعم' : 'لا' })));
+                addSheet('المشاريع-المخاطر', ((typeof pmRisks !== 'undefined' && pmRisks) || []).map(r => ({ 'المشروع': (((typeof pmProjects !== 'undefined' && pmProjects) || []).find(p => p.id === r.project_id) || {}).name || '', 'الخطر': r.title, 'الاحتمال': r.likelihood || '', 'الأثر': r.impact || '' })));
+                addSheet('كتالوج الأسعار', ((typeof priceCatalogItems !== 'undefined' && priceCatalogItems) || []).map(i => ({ 'الصنف': i.item_name, 'الكود': i.item_code || '', 'الوضع': i.pricing_mode === 'import' ? 'استيراد' : 'بسيط' })));
+            }
             const fn = all ? `تقرير_شامل_${now}.xlsx` : `${type}_${now}.xlsx`;
             XLSX.writeFile(wb, fn);
             showToast('success', 'تم التصدير', fn);
