@@ -54,6 +54,64 @@
         function renderTransactions() { const tbody = document.getElementById('transactionsTableBody'); if (data.transactions.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } tbody.innerHTML = data.transactions.map(trans => `<tr><td>${formatDate(trans.date)}</td><td>${esc(trans.description)}</td><td>${t(trans.category)}</td><td><span class="badge ${trans.type === 'income' ? 'badge-success' : 'badge-danger'}">${t(trans.type)}</span></td><td style="font-family: var(--font-mono); ${trans.type === 'income' ? 'color: var(--success)' : 'color: var(--danger)'}">${trans.type === 'income' ? '+' : '-'}${formatCurrency(trans.amount)}</td><td><button class="btn btn-sm btn-secondary" onclick="viewTransaction('${trans.id}')" title="عرض"><i class="fas fa-eye"></i></button> ${canEditAccounting() ? `<button class="btn btn-sm btn-danger" onclick="deleteTransaction('${trans.id}')"><i class="fas fa-trash"></i></button>` : ''}</td></tr>`).join(''); }
         async function deleteTransaction(id) { if (!(await confirmStyled(t('confirmDelete'), {type:'danger'}))) return; const trans = data.transactions.find(t => t.id === id); const { error } = await supabaseClient.from('transactions').delete().eq('id', id); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Accounting', 'delete', trans?.description || id); await loadTransactions(); showToast('success', t('dataDeleted'), ''); }
         function updateAccountingStats() { const income = data.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0); const expenses = data.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0); const balance = income - expenses; document.getElementById('statIncome').textContent = formatCurrency(income); document.getElementById('statExpenses').textContent = formatCurrency(expenses); document.getElementById('statBalance').textContent = formatCurrency(balance); document.getElementById('statRevenue').textContent = formatCurrency(income); }
+        function computeTrialBalance(fromStr, toStr) {
+            var txDate = function(t){ return t.date || (t.createdAt||'').slice(0,10); };
+            var inRange = function(t){ var d = txDate(t); if(!d) return false; if(fromStr && d < fromStr) return false; if(toStr && d > toStr) return false; return true; };
+            var beforeFrom = function(t){ var d = txDate(t); return fromStr && d && d < fromStr; };
+            var rows = [];
+            (data.accounts||[]).forEach(function(acc){
+                var txns = (data.transactions||[]).filter(function(t){ return t.accountId === acc.id; });
+                var openAdj = txns.filter(beforeFrom).reduce(function(s,t){ return s + (t.type==='income'?1:-1)*(parseFloat(t.amount)||0); }, 0);
+                var opening = (parseFloat(acc.balance)||0) + openAdj;
+                var periodTx = txns.filter(inRange);
+                var inc = periodTx.filter(function(t){ return t.type==='income'; }).reduce(function(s,t){ return s+(parseFloat(t.amount)||0); }, 0);
+                var exp = periodTx.filter(function(t){ return t.type==='expense'; }).reduce(function(s,t){ return s+(parseFloat(t.amount)||0); }, 0);
+                rows.push({ name: acc.name, number: acc.number || '-', opening: opening, inc: inc, exp: exp, closing: opening + inc - exp });
+            });
+            var unlinked = (data.transactions||[]).filter(function(t){ return !t.accountId; });
+            if (unlinked.length) {
+                var uOpen = unlinked.filter(beforeFrom).reduce(function(s,t){ return s + (t.type==='income'?1:-1)*(parseFloat(t.amount)||0); }, 0);
+                var uPeriod = unlinked.filter(inRange);
+                var uInc = uPeriod.filter(function(t){ return t.type==='income'; }).reduce(function(s,t){ return s+(parseFloat(t.amount)||0); }, 0);
+                var uExp = uPeriod.filter(function(t){ return t.type==='expense'; }).reduce(function(s,t){ return s+(parseFloat(t.amount)||0); }, 0);
+                rows.push({ name: 'معاملات غير مربوطة بحساب', number: '—', opening: uOpen, inc: uInc, exp: uExp, closing: uOpen + uInc - uExp, unlinked: true });
+            }
+            var totals = rows.reduce(function(a,r){ a.opening+=r.opening; a.inc+=r.inc; a.exp+=r.exp; a.closing+=r.closing; return a; }, {opening:0,inc:0,exp:0,closing:0});
+            return { rows: rows, totals: totals };
+        }
+        function trialBalanceTableHtml(tb, forPrint) {
+            var money = function(v){ return formatCurrency(v); };
+            var rowsHtml = tb.rows.map(function(r){
+                var style = r.unlinked ? ' style="color:#B45309"' : '';
+                return '<tr'+style+'><td>'+esc(r.name)+'</td><td style="font-family:var(--font-mono,monospace)">'+esc(String(r.number))+'</td><td>'+money(r.opening)+'</td><td style="color:'+(forPrint?'#0B6E4F':'var(--success)')+'">'+money(r.inc)+'</td><td style="color:'+(forPrint?'#B00020':'var(--danger)')+'">'+money(r.exp)+'</td><td style="font-weight:700">'+money(r.closing)+'</td></tr>';
+            }).join('');
+            var totalRow = '<tr style="font-weight:bold;background:'+(forPrint?'#f2f2f2':'var(--bg-secondary)')+'"><td colspan="2">الإجمالي</td><td>'+money(tb.totals.opening)+'</td><td>'+money(tb.totals.inc)+'</td><td>'+money(tb.totals.exp)+'</td><td>'+money(tb.totals.closing)+'</td></tr>';
+            var net = tb.totals.inc - tb.totals.exp;
+            var netLine = '<p style="margin:12px 0 0;font-size:14px;font-weight:700;color:'+(net>=0?(forPrint?'#0B6E4F':'var(--success)'):(forPrint?'#B00020':'var(--danger)'))+'">صافي حركة الفترة (وارد − صادر): '+money(net)+'</p>';
+            return '<div class="table-container"><table><thead><tr><th>الحساب</th><th>رقم الحساب</th><th>رصيد أول الفترة</th><th>وارد (مدين)</th><th>صادر (دائن)</th><th>رصيد آخر الفترة</th></tr></thead><tbody>'+rowsHtml+totalRow+'</tbody></table></div>'+netLine;
+        }
+        function renderTrialBalance() {
+            var el = document.getElementById('tbContent');
+            if (!el) return;
+            var fromStr = document.getElementById('tbFrom').value || null;
+            var toStr = document.getElementById('tbTo').value || null;
+            if ((data.accounts||[]).length === 0 && (data.transactions||[]).length === 0) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">'+t('noData')+'</p>'; return; }
+            var tb = computeTrialBalance(fromStr, toStr);
+            var periodLabel = (fromStr||toStr) ? '<p style="font-size:12px;color:var(--text-muted);margin:0 0 10px">الفترة: '+(fromStr?formatDate(fromStr):'البداية')+' ← '+(toStr?formatDate(toStr):'اليوم')+'</p>' : '';
+            el.innerHTML = periodLabel + trialBalanceTableHtml(tb, false);
+        }
+        function printTrialBalance() {
+            var fromStr = document.getElementById('tbFrom') ? (document.getElementById('tbFrom').value || null) : null;
+            var toStr = document.getElementById('tbTo') ? (document.getElementById('tbTo').value || null) : null;
+            var tb = computeTrialBalance(fromStr, toStr);
+            var company = 'شركة الوطنية للطاقة والهندسة المحدودة';
+            var now = new Date().toLocaleDateString('ar-EG');
+            var logo = AEECO_INVOICE_LOGO;
+            var periodLabel = '<p style="font-size:12px;color:#666;margin:0 0 10px">الفترة: '+(fromStr?formatDate(fromStr):'البداية')+' ← '+(toStr?formatDate(toStr):'اليوم')+'</p>';
+            var win = window.open('', '_blank');
+            win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>ميزان المراجعة</title><style>'+_prPrintCSS()+' th{width:auto;text-align:center}td{text-align:center}</style></head><body><div class="head"><img src="'+logo+'"><div class="doc">ميزان المراجعة</div></div>'+periodLabel+trialBalanceTableHtml(tb, true)+'<div class="footer">طُبع من نظام '+esc(company)+' — '+now+'</div><br><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ طباعة / حفظ PDF</button></body></html>');
+            win.document.close();
+        }
         function renderAccountingReports() {
             if (!document.getElementById('plContent')) return;
             const from = document.getElementById('plFrom').value;
