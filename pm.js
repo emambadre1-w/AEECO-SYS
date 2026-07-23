@@ -271,11 +271,28 @@ async function renderProjectPortfolio(){
                     }).length;
                 }catch(e){ console.error('exd requests', e); }
                 const profit=income-expense;
+                let kDaily=0, kInv=0, prInv=0;
+                try{
+                    const { data: kex } = await supabaseClient.from('kitchen_expenses').select('amount,expense_date');
+                    (kex||[]).forEach(function(x){ if(_exdInRange(x.expense_date, range)) kDaily += Number(x.amount)||0; });
+                }catch(e){ console.error('exd kitchen_expenses', e); }
+                try{
+                    const { data: kin } = await supabaseClient.from('kitchen_invoices').select('amount,status,date');
+                    (kin||[]).forEach(function(x){ if(x.status==='paid' && _exdInRange(x.date, range)) kInv += Number(x.amount)||0; });
+                }catch(e){ console.error('exd kitchen_invoices', e); }
+                try{
+                    const { data: pin } = await supabaseClient.from('pr_invoices').select('amount,status,date');
+                    (pin||[]).forEach(function(x){ if(x.status==='paid' && _exdInRange(x.date, range)) prInv += Number(x.amount)||0; });
+                }catch(e){ console.error('exd pr_invoices', e); }
                 function setVal(id,val){ const el=document.getElementById(id); if(el){ el.textContent=val; el.classList.remove('ph'); } }
                 setVal('exdRevenue', exdMoney(income));
                 setVal('exdProfit', exdMoney(profit));
                 setVal('exdProjects', String(activeProjects));
                 setVal('exdPending', String(pendingApprovals));
+                setVal('exdDeptKitchenDaily', exdMoney(kDaily));
+                setVal('exdDeptKitchenInv', exdMoney(kInv));
+                setVal('exdDeptPrInv', exdMoney(prInv));
+                setVal('exdDeptTotal', exdMoney(kDaily + kInv + prInv));
                 try{ await renderExecCharts(); }catch(e){ console.error('exd charts', e); }
                 try{ renderExecLists(); }catch(e){ console.error('exd lists', e); }
             }catch(e){ console.error('renderExecDashboard error', e); }
