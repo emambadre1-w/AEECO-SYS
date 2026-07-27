@@ -241,7 +241,7 @@ async function renderProjectPortfolio(){
             const pageEl = document.getElementById(`page-${page}`);
             const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
             if (pageEl) pageEl.classList.add('active');
-            if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard(); if (page === 'execdash') { _exdInitFilters().then(renderExecDashboard); } if (page === 'projectportfolio') renderProjectPortfolio(); if (page === 'pricecatalog') loadPriceCatalogModule(); if (page === 'settings') renderMySignaturePreview(); if (page === 'myhr') loadMyHRInfo(); if (page === 'hr') { renderHRSummary(); renderAttendanceSummary(); }
+            if (navEl) navEl.classList.add('active'); if (page === 'reports') renderReportsDashboard(); if (page === 'execdash') { _exdInitFilters().then(renderExecDashboard); } if (page === 'projectportfolio') renderProjectPortfolio(); if (page === 'pricecatalog') loadPriceCatalogModule(); if (page === 'settings') renderMySignaturePreview(); if (page === 'myhr') loadMyHRInfo(); if (page === 'hr') { renderHRSummary(); renderAttendanceSummary(); } if (page === 'accounting') loadBooksClosing();
             remindSectionGuide(page);
             try { localStorage.setItem('aeeco_last_page', page); } catch (e) {}
             document.getElementById('sidebar').classList.remove('open');
@@ -285,15 +285,31 @@ async function renderProjectPortfolio(){
                 }catch(e){ console.error('exd pr_invoices', e); }
                 const deptSpend = kDaily + kInv + prInv;
                 const profit = income - expense - deptSpend;
-                function setVal(id,val){ const el=document.getElementById(id); if(el){ el.textContent=val; el.classList.remove('ph'); } }
-                setVal('exdRevenue', exdMoney(income));
-                setVal('exdProfit', exdMoney(profit));
-                setVal('exdProjects', String(activeProjects));
-                setVal('exdPending', String(pendingApprovals));
-                setVal('exdDeptKitchenDaily', exdMoney(kDaily));
-                setVal('exdDeptKitchenInv', exdMoney(kInv));
-                setVal('exdDeptPrInv', exdMoney(prInv));
-                setVal('exdDeptTotal', exdMoney(kDaily + kInv + prInv));
+                // عدّاد متحرّك — يعطي إحساسًا فاخرًا دون المساس بالقيمة النهائية
+                function setNum(id, target, fmt){
+                    const el = document.getElementById(id);
+                    if(!el) return;
+                    el.classList.remove('ph');
+                    const to = Number(target) || 0;
+                    if (el._exdAnim) cancelAnimationFrame(el._exdAnim);
+                    const dur = 900, t0 = performance.now();
+                    (function step(now){
+                        const k = Math.min(1, (now - t0) / dur);
+                        const eased = 1 - Math.pow(1 - k, 4);
+                        el.textContent = fmt(to * eased);
+                        if (k < 1) el._exdAnim = requestAnimationFrame(step);
+                        else { el.textContent = fmt(to); el._exdAnim = null; }
+                    })(t0);
+                }
+                const _asInt = function(v){ return String(Math.round(v)); };
+                setNum('exdRevenue', income, exdMoney);
+                setNum('exdProfit', profit, exdMoney);
+                setNum('exdProjects', activeProjects, _asInt);
+                setNum('exdPending', pendingApprovals, _asInt);
+                setNum('exdDeptKitchenDaily', kDaily, exdMoney);
+                setNum('exdDeptKitchenInv', kInv, exdMoney);
+                setNum('exdDeptPrInv', prInv, exdMoney);
+                setNum('exdDeptTotal', kDaily + kInv + prInv, exdMoney);
                 try{ await renderExecCharts(); }catch(e){ console.error('exd charts', e); }
                 try{ renderExecLists(); }catch(e){ console.error('exd lists', e); }
             }catch(e){ console.error('renderExecDashboard error', e); }

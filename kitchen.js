@@ -17,7 +17,7 @@
             if (['kitchen','gm','admin'].includes(currentUser.role)) { await loadKitchenModule(); }
             if (['secretary','gm','admin'].includes(currentUser.role)) { await loadSecretaryModule(); }
             if (['accountant','financial_manager','internal_auditor','gm','admin'].includes(currentUser.role)) { await loadTransactions(); await loadInvoices(); await loadAccounts(); }
-            if (['hr','gm','admin'].includes(currentUser.role)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); renderAttendanceSummary(); renderHRSummary(); }
+            if (['hr','gm','admin'].includes(currentUser.role)) { await loadEmployees(); await loadAttendance(); await loadLeaves(); await loadPayroll(); renderAttendanceSummary(); renderHRSummary(); } await loadBooksClosing();
             if (['gm','admin'].includes(currentUser.role)) await loadActivityLog();
             await loadRequestsModule();
             if (USERS_PAGE_ROLES.includes(currentUser.role)) await loadUsersModule();

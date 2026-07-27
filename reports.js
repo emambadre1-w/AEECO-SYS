@@ -103,6 +103,56 @@
             }catch(e){ console.error('renderExecLists', e); }
         }
         
+        // ===================== لمسات بصرية فاخرة للرسوم =====================
+        function _exdGradient(ctx, area, from, to){
+            if(!area) return from;
+            var g = ctx.createLinearGradient(0, area.bottom, 0, area.top);
+            g.addColorStop(0, from);
+            g.addColorStop(1, to);
+            return g;
+        }
+        function _exdHex(hex, a){
+            var h = hex.replace('#','');
+            var r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+            return 'rgba('+r+','+g+','+b+','+a+')';
+        }
+        // ظل ناعم أسفل كل عنصر — يعطي إحساس العمق بدون تشويه القيم
+        var _exdShadowPlugin = {
+            id: 'exdShadow',
+            beforeDatasetsDraw: function(chart){
+                var c = chart.ctx;
+                c.save();
+                c.shadowColor = 'rgba(15,23,42,0.22)';
+                c.shadowBlur = 14;
+                c.shadowOffsetX = 0;
+                c.shadowOffsetY = 6;
+            },
+            afterDatasetsDraw: function(chart){ chart.ctx.restore(); }
+        };
+        // كتابة الإجمالي في قلب الرسم الدائري
+        var _exdDoughnutCenter = {
+            id: 'exdDoughnutCenter',
+            afterDraw: function(chart){
+                if(chart.config.type !== 'doughnut') return;
+                var ds = chart.data.datasets[0];
+                if(!ds) return;
+                var total = (ds.data||[]).reduce(function(s,v){ return s + (Number(v)||0); }, 0);
+                if(!total) return;
+                var c = chart.ctx, area = chart.chartArea;
+                if(!area) return;
+                var cx = (area.left + area.right)/2, cy = (area.top + area.bottom)/2;
+                c.save();
+                c.textAlign = 'center'; c.textBaseline = 'middle';
+                c.fillStyle = '#64748B';
+                c.font = '600 11px Cairo, Arial, sans-serif';
+                c.fillText('الإجمالي', cx, cy - 14);
+                c.fillStyle = '#0F172A';
+                c.font = '800 17px Cairo, Arial, sans-serif';
+                c.fillText(exdMoney(total), cx, cy + 8);
+                c.restore();
+            }
+        };
+        var _EXD_ANIM = { duration: 1100, easing: 'easeOutQuart' };
         async function renderExecCharts(){
             if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
             var periodKey = (document.getElementById('exdFilterPeriod')||{}).value || 'q6';
@@ -145,14 +195,23 @@
                 _exdC1 = new Chart(cv1, {
                     type:'bar',
                     data:{ labels:mLabels, datasets:[
-                        { label:'الإيرادات', data:incArr, backgroundColor:'#22C55E', borderRadius:5, maxBarThickness:26 },
-                        { label:'المصروفات', data:expArr, backgroundColor:'#EF4444', borderRadius:5, maxBarThickness:26 }
+                        { label:'الإيرادات', data:incArr, borderRadius:{topLeft:8,topRight:8,bottomLeft:2,bottomRight:2}, borderSkipped:false, maxBarThickness:30,
+                          backgroundColor:function(ctx){ return _exdGradient(ctx.chart.ctx, ctx.chart.chartArea, '#16A34A', '#4ADE80'); },
+                          hoverBackgroundColor:function(ctx){ return _exdGradient(ctx.chart.ctx, ctx.chart.chartArea, '#15803D', '#86EFAC'); } },
+                        { label:'المصروفات', data:expArr, borderRadius:{topLeft:8,topRight:8,bottomLeft:2,bottomRight:2}, borderSkipped:false, maxBarThickness:30,
+                          backgroundColor:function(ctx){ return _exdGradient(ctx.chart.ctx, ctx.chart.chartArea, '#DC2626', '#F87171'); },
+                          hoverBackgroundColor:function(ctx){ return _exdGradient(ctx.chart.ctx, ctx.chart.chartArea, '#B91C1C', '#FCA5A5'); } }
                     ]},
-                    options:{ responsive:true, maintainAspectRatio:false,
-                        plugins:{ legend:{ labels:{ color:'#1E293B', font:{family:'Cairo',size:12}, usePointStyle:true, pointStyle:'circle' } },
-                                  tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+exdMoney(c.parsed.y); } } } },
-                        scales:{ x:{ ticks:{ color:'#64748B', font:{family:'Cairo'} }, grid:{ display:false } },
-                                 y:{ ticks:{ color:'#64748B', font:{family:'Cairo'}, callback:function(v){ return exdMoney(v); } }, grid:{ color:'#E2E8F0' } } } }
+                    options:{ responsive:true, maintainAspectRatio:false, animation:_EXD_ANIM,
+                        interaction:{ mode:'index', intersect:false },
+                        plugins:{ legend:{ labels:{ color:'#1E293B', font:{family:'Cairo',size:12,weight:'600'}, usePointStyle:true, pointStyle:'circle', padding:16 } },
+                                  tooltip:{ backgroundColor:'rgba(15,23,42,0.92)', titleFont:{family:'Cairo',size:13,weight:'700'}, bodyFont:{family:'Cairo',size:12},
+                                            padding:12, cornerRadius:10, displayColors:true, usePointStyle:true, boxPadding:6,
+                                            callbacks:{ label:function(c){ return '  '+c.dataset.label+': '+exdMoney(c.parsed.y); } } } },
+                        scales:{ x:{ ticks:{ color:'#64748B', font:{family:'Cairo',size:11} }, grid:{ display:false }, border:{ display:false } },
+                                 y:{ ticks:{ color:'#94A3B8', font:{family:'Cairo',size:11}, padding:8, callback:function(v){ return exdMoney(v); } },
+                                     grid:{ color:'rgba(226,232,240,0.7)', drawTicks:false }, border:{ display:false } } } },
+                    plugins:[_exdShadowPlugin]
                 });
             } else if (cv1) {
                 cv1.style.display='none'; if(em1) em1.style.display='flex';
@@ -178,10 +237,20 @@
                 _exdC2 = new Chart(cv2, {
                     type:'doughnut',
                     data:{ labels:cats, datasets:[{ data:cats.map(function(c){return catMap[c];}),
-                            backgroundColor:cats.map(function(c,i){return pal[i%pal.length];}), borderWidth:2, borderColor:'#FFFFFF' }]},
-                    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
-                        plugins:{ legend:{ position:'bottom', labels:{ color:'#1E293B', font:{family:'Cairo',size:12}, padding:14, usePointStyle:true, pointStyle:'circle' } },
-                                  tooltip:{ callbacks:{ label:function(c){ return c.label+': '+exdMoney(c.parsed); } } } } }
+                            backgroundColor:cats.map(function(c,i){return pal[i%pal.length];}),
+                            hoverBackgroundColor:cats.map(function(c,i){return pal[i%pal.length];}),
+                            borderWidth:3, borderColor:'#FFFFFF', hoverBorderColor:'#FFFFFF',
+                            hoverOffset:14, spacing:2 }]},
+                    options:{ responsive:true, maintainAspectRatio:false, cutout:'66%', animation:Object.assign({animateRotate:true, animateScale:true}, _EXD_ANIM),
+                        layout:{ padding:8 },
+                        plugins:{ legend:{ position:'bottom', labels:{ color:'#1E293B', font:{family:'Cairo',size:12,weight:'600'}, padding:15, usePointStyle:true, pointStyle:'circle' } },
+                                  tooltip:{ backgroundColor:'rgba(15,23,42,0.92)', titleFont:{family:'Cairo',size:13,weight:'700'}, bodyFont:{family:'Cairo',size:12},
+                                            padding:12, cornerRadius:10, usePointStyle:true, boxPadding:6,
+                                            callbacks:{ label:function(c){
+                                                var tot=(c.dataset.data||[]).reduce(function(s,v){return s+(Number(v)||0);},0);
+                                                var pct = tot ? Math.round((c.parsed/tot)*100) : 0;
+                                                return '  '+c.label+': '+exdMoney(c.parsed)+' ('+pct+'٪)'; } } } } },
+                    plugins:[_exdShadowPlugin, _exdDoughnutCenter]
                 });
             } else if (cv2) {
                 cv2.style.display='none'; if(em2) em2.style.display='flex';
