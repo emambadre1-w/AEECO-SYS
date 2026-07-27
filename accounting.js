@@ -51,7 +51,49 @@
 
         function openAddTransactionModal() { document.getElementById('transactionForm').reset(); document.getElementById('transactionId').value = ''; openModal('transactionModal'); }
         async function saveTransaction() { const id = document.getElementById('transactionId').value || generateId(); const isNew = !document.getElementById('transactionId').value; const transaction = {id: id, type: document.getElementById('transactionType').value, amount: parseFloat(document.getElementById('transactionAmount').value), description: document.getElementById('transactionDescription').value, category: document.getElementById('transactionCategory').value, accountId: document.getElementById('transactionAccount').value || null, date: document.getElementById('transactionDate').value || null, createdAt: isNew ? new Date().toISOString() : (data.transactions.find(t => t.id === id)?.createdAt || new Date().toISOString())}; const { error } = await supabaseClient.from('transactions').upsert(transaction); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Accounting', isNew ? 'create' : 'update', transaction.description); await loadTransactions(); closeModal('transactionModal'); showToast('success', t('dataSaved'), formatCurrency(transaction.amount)); }
-        function renderTransactions() { const tbody = document.getElementById('transactionsTableBody'); if (data.transactions.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } tbody.innerHTML = data.transactions.map(trans => `<tr><td>${formatDate(trans.date)}</td><td>${esc(trans.description)}</td><td>${t(trans.category)}</td><td><span class="badge ${trans.type === 'income' ? 'badge-success' : 'badge-danger'}">${t(trans.type)}</span></td><td style="font-family: var(--font-mono); ${trans.type === 'income' ? 'color: var(--success)' : 'color: var(--danger)'}">${trans.type === 'income' ? '+' : '-'}${formatCurrency(trans.amount)}</td><td><button class="btn btn-sm btn-secondary" onclick="viewTransaction('${trans.id}')" title="عرض"><i class="fas fa-eye"></i></button> ${canEditAccounting() ? `<button class="btn btn-sm btn-danger" onclick="deleteTransaction('${trans.id}')"><i class="fas fa-trash"></i></button>` : ''}</td></tr>`).join(''); }
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionsTableBody');
+            if (data.transactions.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; }
+            tbody.innerHTML = data.transactions.map(trans => {
+                const isReversed = !!trans.reversed_by;
+                const isReversal = !!trans.reverses_id;
+                let tag = '';
+                if (isReversed) tag = ' <span class="badge badge-gray" style="font-size:10px">معكوس</span>';
+                else if (isReversal) tag = ' <span class="badge badge-warning" style="font-size:10px">قيد عكسي</span>';
+                const rowStyle = isReversed ? ' style="opacity:.62"' : '';
+                const entryNo = trans.entry_no != null ? String(trans.entry_no) : '—';
+                const canReverse = canEditAccounting() && !isReversed && !isReversal;
+                return `<tr${rowStyle}><td style="font-family: var(--font-mono); font-weight:700">${entryNo}</td><td>${formatDate(trans.date)}</td><td>${esc(trans.description)}${tag}</td><td>${t(trans.category)}</td><td><span class="badge ${trans.type === 'income' ? 'badge-success' : 'badge-danger'}">${t(trans.type)}</span></td><td style="font-family: var(--font-mono); ${trans.type === 'income' ? 'color: var(--success)' : 'color: var(--danger)'}">${trans.type === 'income' ? '+' : '-'}${formatCurrency(trans.amount)}</td><td><button class="btn btn-sm btn-secondary" onclick="viewTransaction('${trans.id}')" title="عرض"><i class="fas fa-eye"></i></button>${canReverse ? ` <button class="btn btn-sm btn-secondary" style="color:#B45309" onclick="reverseTransaction('${trans.id}')" title="قيد عكسي"><i class="fas fa-rotate-left"></i></button>` : ''}</td></tr>`;
+            }).join('');
+        }
+        async function reverseTransaction(id) {
+            const orig = data.transactions.find(t => t.id === id);
+            if (!orig) return;
+            if (orig.reversed_by) { showToast('warning', 'معكوس مسبقًا', 'هذا القيد له قيد عكسي بالفعل'); return; }
+            if (orig.reverses_id) { showToast('warning', 'غير مسموح', 'لا يمكن عكس قيد عكسي'); return; }
+            const label = '#' + (orig.entry_no != null ? orig.entry_no : '') + ' — ' + (orig.description || '');
+            const msg = 'سيتم إنشاء قيد عكسي يلغي أثر هذا القيد ماليًا:\n' + label + '\nالمبلغ: ' + formatCurrency(orig.amount) + '\n\nالقيد الأصلي يبقى في السجل للمراجعة ولا يُحذف. متابعة؟';
+            if (!(await confirmStyled(msg, {type:'warning', title:'إنشاء قيد عكسي', okLabel:'إنشاء القيد العكسي'}))) return;
+            const revId = generateId();
+            const reversal = {
+                id: revId,
+                type: orig.type === 'income' ? 'expense' : 'income',
+                amount: orig.amount,
+                description: 'قيد عكسي لـ ' + label,
+                category: orig.category,
+                accountId: orig.accountId || null,
+                date: new Date().toISOString().slice(0,10),
+                reverses_id: orig.id,
+                createdAt: new Date().toISOString()
+            };
+            const { error: e1 } = await supabaseClient.from('transactions').insert(reversal);
+            if (e1) { showToast('error', 'تعذّر إنشاء القيد العكسي', e1.message); return; }
+            const { error: e2 } = await supabaseClient.from('transactions').update({ reversed_by: revId }).eq('id', orig.id);
+            if (e2) { showToast('error', 'تم إنشاء القيد العكسي لكن تعذّر ربطه بالأصل', e2.message); }
+            logActivity('Accounting', 'create', 'قيد عكسي لـ ' + label);
+            await loadTransactions();
+            showToast('success', 'تم إنشاء القيد العكسي', formatCurrency(orig.amount));
+        }
         async function deleteTransaction(id) { if (!(await confirmStyled(t('confirmDelete'), {type:'danger'}))) return; const trans = data.transactions.find(t => t.id === id); const { error } = await supabaseClient.from('transactions').delete().eq('id', id); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Accounting', 'delete', trans?.description || id); await loadTransactions(); showToast('success', t('dataDeleted'), ''); }
         function updateAccountingStats() { const income = data.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0); const expenses = data.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0); const balance = income - expenses; document.getElementById('statIncome').textContent = formatCurrency(income); document.getElementById('statExpenses').textContent = formatCurrency(expenses); document.getElementById('statBalance').textContent = formatCurrency(balance); document.getElementById('statRevenue').textContent = formatCurrency(income); }
         function computeTrialBalance(fromStr, toStr) {
@@ -151,4 +193,23 @@
         async function deleteAccount(id) { if (!(await confirmStyled(t('confirmDelete'), {type:'danger'}))) return; const acc = data.accounts.find(a => a.id === id); const { error } = await supabaseClient.from('accounts').delete().eq('id', id); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Accounts', 'delete', acc?.name || id); await loadAccounts(); showToast('success', t('dataDeleted'), ''); }
         function viewInvoice(id){ var r=(data.invoices||[]).find(function(x){return x.id===id;}); if(!r) return; showDetailsModal('تفاصيل الفاتورة', [['رقم الفاتورة',esc(r.number||'-')],['العميل',esc(r.client||'-')],['المبلغ',r.amount!=null?formatCurrency(r.amount):'-'],['الحالة',esc(r.status||'-')],['التاريخ',r.date?formatDate(r.date):'-'],['تاريخ الاستحقاق',r.dueDate?formatDate(r.dueDate):'-'],['ملاحظات',esc(r.notes||'-')]]); }
         function viewAccount(id){ var r=(data.accounts||[]).find(function(x){return x.id===id;}); if(!r) return; showDetailsModal('تفاصيل الحساب', [['رقم الحساب',esc(r.number||'-')],['الاسم',esc(r.name||'-')],['النوع',esc(r.type||'-')],['الرصيد',r.balance!=null?formatCurrency(r.balance):'-']]); }
-        function viewTransaction(id){ var r=(data.transactions||[]).find(function(x){return x.id===id;}); if(!r) return; showDetailsModal('تفاصيل المعاملة', [['النوع',esc(r.type||'-')],['الفئة',esc(r.category||'-')],['الوصف',esc(r.description||'-')],['المبلغ',r.amount!=null?formatCurrency(r.amount):'-'],['التاريخ',r.date?formatDate(r.date):'-']]); }
+        function viewTransaction(id){
+            var r=(data.transactions||[]).find(function(x){return x.id===id;});
+            if(!r) return;
+            var rows = [
+                ['رقم القيد', r.entry_no != null ? String(r.entry_no) : '—'],
+                ['النوع', esc(r.type||'-')],
+                ['الفئة', esc(r.category||'-')],
+                ['الوصف', esc(r.description||'-')],
+                ['المبلغ', r.amount!=null?formatCurrency(r.amount):'-'],
+                ['التاريخ', r.date?formatDate(r.date):'-']
+            ];
+            if (r.reversed_by) {
+                var rev = (data.transactions||[]).find(function(x){ return x.id === r.reversed_by; });
+                rows.push(['الحالة', 'معكوس بالقيد رقم ' + (rev && rev.entry_no != null ? rev.entry_no : '—')]);
+            } else if (r.reverses_id) {
+                var orig = (data.transactions||[]).find(function(x){ return x.id === r.reverses_id; });
+                rows.push(['الحالة', 'قيد عكسي للقيد رقم ' + (orig && orig.entry_no != null ? orig.entry_no : '—')]);
+            }
+            showDetailsModal('تفاصيل المعاملة', rows);
+        }

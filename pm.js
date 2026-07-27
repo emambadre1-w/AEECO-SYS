@@ -270,7 +270,6 @@ async function renderProjectPortfolio(){
                         return true;
                     }).length;
                 }catch(e){ console.error('exd requests', e); }
-                const profit=income-expense;
                 let kDaily=0, kInv=0, prInv=0;
                 try{
                     const { data: kex } = await supabaseClient.from('kitchen_expenses').select('amount,expense_date');
@@ -284,6 +283,8 @@ async function renderProjectPortfolio(){
                     const { data: pin } = await supabaseClient.from('pr_invoices').select('amount,status,date');
                     (pin||[]).forEach(function(x){ if(x.status==='paid' && _exdInRange(x.date, range)) prInv += Number(x.amount)||0; });
                 }catch(e){ console.error('exd pr_invoices', e); }
+                const deptSpend = kDaily + kInv + prInv;
+                const profit = income - expense - deptSpend;
                 function setVal(id,val){ const el=document.getElementById(id); if(el){ el.textContent=val; el.classList.remove('ph'); } }
                 setVal('exdRevenue', exdMoney(income));
                 setVal('exdProfit', exdMoney(profit));
