@@ -1,5 +1,5 @@
         async function loadEmployees() { try { const { data: rows, error } = await supabaseClient.from('employees').select('*').order('createdAt', { ascending: false }); if (error) console.warn('employees:', error.message); else data.employees = rows || []; } catch (e) { console.warn('employees:', e); } renderEmployees(); const el = document.getElementById('statEmployees'); if (el) el.textContent = data.employees.length; renderLeaveBalances(); renderHRSummary(); }
-        async function loadAttendance() { try { const { data: rows, error } = await supabaseClient.from('attendance').select('*').order('date', { ascending: false }); if (error) console.warn('attendance:', error.message); else data.attendance = rows || []; } catch (e) { console.warn('attendance:', e); } renderAttendance(); renderAttendanceSummary(); renderTodayAttendanceCard(); }
+        async function loadAttendance() { try { const { data: rows, error } = await supabaseClient.from('attendance').select('*').order('date', { ascending: false }); if (error) console.warn('attendance:', error.message); else data.attendance = rows || []; } catch (e) { console.warn('attendance:', e); } renderAttendance(); renderAttendanceSummary(); }
         async function loadLeaves() { try { const { data: rows, error } = await supabaseClient.from('leaves').select('*').order('createdAt', { ascending: false }); if (error) console.warn('leaves:', error.message); else data.leaves = rows || []; } catch (e) { console.warn('leaves:', e); } renderLeaves(); renderLeaveBalances(); renderHRSummary(); }
         async function loadPayroll() { try { const { data: rows, error } = await supabaseClient.from('payroll').select('*').order('createdAt', { ascending: false }); if (error) console.warn('payroll:', error.message); else data.payroll = rows || []; } catch (e) { console.warn('payroll:', e); } renderPayroll(); }
         document.getElementById('signupForm').addEventListener('submit', async function(e) { e.preventDefault(); showAuthError(''); if (!isSupabaseConfigured()) { showAuthError(t('configMissing')); return; } const fullName = document.getElementById('signupName').value; const empCode = document.getElementById('signupCode').value; const email = document.getElementById('signupEmail').value; const password = document.getElementById('signupPassword').value; const btn = document.getElementById('signupSubmitBtn'); btn.disabled = true; const { data: authData, error } = await supabaseClient.auth.signUp({ email, password, options: { data: { full_name: fullName } } }); btn.disabled = false; if (error) { showAuthError(error.message); return; } if (empCode && authData.user) { await supabaseClient.from('profiles').update({ employee_code: empCode }).eq('id', authData.user.id); } if (authData.session) { await onAuthSuccess(); } else { showToast('success', t('accountCreated'), ''); document.getElementById('switchToLogin').click(); } });
@@ -447,34 +447,6 @@
                 return '<tr><td>'+esc(e.name||'-')+'</td><td>'+sm.daysPresent+'</td><td>'+sm.totalHours.toFixed(1)+'</td><td>'+sm.overtimeHours.toFixed(1)+'</td><td>'+lateBadge+'</td></tr>';
             }).join('');
         }
-        function renderTodayAttendanceCard(){
-            var body = document.getElementById('todayAttendanceBody');
-            if(!body) return;
-            var dateEl = document.getElementById('todayCardDate');
-            var todayStr = new Date().toISOString().slice(0,10);
-            if(dateEl) dateEl.textContent = '— ' + formatDate(todayStr);
-            var activeEmps = (data.employees||[]).filter(function(e){ return (e.status||'active')==='active'; });
-            if(activeEmps.length===0){ body.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">'+t('noData')+'</div>'; return; }
-            var STANDARD_START_MIN = 480;
-            var todayAtt = (data.attendance||[]).filter(function(a){ return a.date === todayStr; });
-            var presentIds = {}; var lateList = [];
-            todayAtt.forEach(function(a){
-                presentIds[a.employeeId] = true;
-                if(a.checkIn){ var p = a.checkIn.split(':'); var inMin = parseInt(p[0],10)*60 + parseInt(p[1]||0,10); if(inMin > STANDARD_START_MIN){ var e = activeEmps.find(function(x){ return x.id===a.employeeId; }); if(e) lateList.push(e); } }
-            });
-            var onLeaveList = activeEmps.filter(function(e){ return (data.leaves||[]).some(function(l){ return l.employeeId===e.id && l.status==='approved' && l.fromDate && l.toDate && l.fromDate<=todayStr && l.toDate>=todayStr; }); });
-            var onLeaveIds = {}; onLeaveList.forEach(function(e){ onLeaveIds[e.id]=true; });
-            var absentList = activeEmps.filter(function(e){ return !presentIds[e.id] && !onLeaveIds[e.id]; });
-            function chips(list, color){ return list.map(function(e){ return '<span onclick="viewEmployee(\''+e.id+'\')" style="display:inline-block;cursor:pointer;padding:4px 12px;border-radius:20px;font-size:13px;margin:0 0 6px 6px;background:'+color.bg+';color:'+color.fg+';border:1px solid '+color.bd+';">'+esc(e.name)+'</span>'; }).join(''); }
-            function group(icon, label, list, color, emptyMsg){
-                var inner = list.length ? chips(list, color) : '<span style="font-size:12px;color:var(--text-muted);">'+emptyMsg+'</span>';
-                return '<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;color:'+color.fg+';"><i class="fas '+icon+'"></i> '+label+' ('+list.length+')</div><div>'+inner+'</div></div>';
-            }
-            body.innerHTML =
-                group('fa-user-xmark','الغائبون اليوم', absentList, {bg:'rgba(239,68,68,.10)', fg:'#EF4444', bd:'rgba(239,68,68,.25)'}, 'لا غياب — الكل تمام ✔')
-                + group('fa-clock','المتأخرون', lateList, {bg:'rgba(245,158,11,.12)', fg:'#B45309', bd:'rgba(245,158,11,.3)'}, 'لا تأخير اليوم')
-                + group('fa-plane-departure','في إجازة معتمدة', onLeaveList, {bg:'rgba(59,130,246,.10)', fg:'#3B82F6', bd:'rgba(59,130,246,.25)'}, 'لا أحد في إجازة اليوم');
-        }
         function renderHRSummary(){
             var totalEl = document.getElementById('hrSumTotal');
             var pendingEl = document.getElementById('hrSumPending');
@@ -490,7 +462,6 @@
             if(onLeaveEl) onLeaveEl.textContent = String(onLeave);
             var expiringEl = document.getElementById('hrSumExpiring');
             if(expiringEl) expiringEl.textContent = String(activeEmps.filter(isContractExpiringSoon).length);
-            renderTodayAttendanceCard();
         }
         async function generateMonthlyPayroll(){
             var monthInput = document.getElementById('payrollGenMonth');
@@ -705,7 +676,7 @@
             const days = Math.ceil((new Date(emp.contractEndDate) - new Date()) / 86400000);
             return days <= 30;
         }
-        function renderEmployees() { const tbody = document.getElementById('employeesTableBody'); const filterEl = document.getElementById('empStatusFilter'); const filter = filterEl ? filterEl.value : 'all'; const searchEl = document.getElementById('empNameSearch'); const q = searchEl ? searchEl.value.trim().toLowerCase() : ''; let list = data.employees; if (filter === 'expiringSoon') list = list.filter(isContractExpiringSoon); else if (filter && filter !== 'all') list = list.filter(e => (e.status || 'active') === filter); if (q) list = list.filter(e => ((e.name || '').toLowerCase().includes(q)) || ((e.empId || '').toLowerCase().includes(q))); if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } const badge = { active: 'badge-success', onLeave: 'badge-warning', terminated: 'badge-gray' }; tbody.innerHTML = list.map(emp => { const st = emp.status || 'active'; return `<tr><td style="font-family: var(--font-mono);">${esc(emp.empId)}</td><td>${esc(emp.name)}</td><td>${esc(emp.position || '-')}</td><td>${esc(emp.department || '-')}</td><td>${esc(emp.phone || '-')}</td><td><span class="badge ${badge[st] || 'badge-gray'}">${t('status' + st.charAt(0).toUpperCase() + st.slice(1))}</span></td><td>${contractBadgeHtml(emp)}</td><td><button class="btn btn-sm btn-secondary" onclick="viewEmployee('${emp.id}')" title="عرض"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-secondary" onclick="editEmployee('${emp.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${emp.id}')"><i class="fas fa-trash"></i></button></td></tr>`; }).join(''); }
+        function renderEmployees() { const tbody = document.getElementById('employeesTableBody'); const filterEl = document.getElementById('empStatusFilter'); const filter = filterEl ? filterEl.value : 'all'; let list = data.employees; if (filter === 'expiringSoon') list = list.filter(isContractExpiringSoon); else if (filter && filter !== 'all') list = list.filter(e => (e.status || 'active') === filter); if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } const badge = { active: 'badge-success', onLeave: 'badge-warning', terminated: 'badge-gray' }; tbody.innerHTML = list.map(emp => { const st = emp.status || 'active'; return `<tr><td style="font-family: var(--font-mono);">${esc(emp.empId)}</td><td>${esc(emp.name)}</td><td>${esc(emp.position || '-')}</td><td>${esc(emp.department || '-')}</td><td>${esc(emp.phone || '-')}</td><td><span class="badge ${badge[st] || 'badge-gray'}">${t('status' + st.charAt(0).toUpperCase() + st.slice(1))}</span></td><td>${contractBadgeHtml(emp)}</td><td><button class="btn btn-sm btn-secondary" onclick="viewEmployee('${emp.id}')" title="عرض"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-secondary" onclick="editEmployee('${emp.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${emp.id}')"><i class="fas fa-trash"></i></button></td></tr>`; }).join(''); }
         async function populateEmployeeLinkDropdowns(currentEmpId) {
             const mgrSel = document.getElementById('empManagerId');
             const others = (data.employees||[]).filter(e => e.id !== currentEmpId);
@@ -742,12 +713,14 @@
             notLinked.style.display = 'none';
             content.style.display = '';
             const empId = myHRData.employee.id;
-            const [payRes, lvRes] = await Promise.all([
+            const [payRes, lvRes, asRes] = await Promise.all([
                 supabaseClient.from('payroll').select('*').eq('employeeId', empId).order('month', { ascending: false }),
-                supabaseClient.from('leaves').select('*').eq('employeeId', empId).order('fromDate', { ascending: false })
+                supabaseClient.from('leaves').select('*').eq('employeeId', empId).order('fromDate', { ascending: false }),
+                supabaseClient.from('fixed_assets').select('*').eq('employee_id', empId).order('name')
             ]);
             myHRData.payroll = payRes.data || [];
             myHRData.leaves = lvRes.data || [];
+            myHRData.assets = (asRes && asRes.data) || [];
             renderMyHRPage();
         }
         function renderMyHRPage() {
@@ -758,6 +731,17 @@
             const total = emp.annualLeave != null ? emp.annualLeave : 21;
             const remaining = Math.max(0, total - used);
             document.getElementById('myHrLeaveBalanceBody').innerHTML = `<div style="display:flex;justify-content:space-around;text-align:center;"><div><div style="font-size:24px;font-weight:700;color:var(--success);">${remaining}</div><div style="font-size:12px;color:var(--text-muted);">${t('remainingDays')}</div></div><div><div style="font-size:24px;font-weight:700;">${used}</div><div style="font-size:12px;color:var(--text-muted);">${t('usedDays')}</div></div><div><div style="font-size:24px;font-weight:700;">${total}</div><div style="font-size:12px;color:var(--text-muted);">${t('entitlement')}</div></div></div><button class="btn btn-sm btn-primary" style="width:100%;margin-top:14px;" onclick="navigateTo('requests')"><i class="fas fa-plus"></i> ${t('newLeave')}</button>`;
+            const asCard = document.getElementById('myHrAssetsCard');
+            const asBody = document.getElementById('myHrAssetsBody');
+            const myAssets = (myHRData.assets || []).filter(function(a){ return (a.status||'active') !== 'sold' && (a.status||'active') !== 'written_off'; });
+            if (asCard) asCard.classList.toggle('app-hidden', myAssets.length === 0);
+            if (asBody && myAssets.length) {
+                asBody.innerHTML = myAssets.map(function(a){
+                    var catLbl = (typeof assetCategoryLabel === 'function') ? assetCategoryLabel(a.category) : esc(a.category || '-');
+                    var stLbl  = (typeof assetStatusBadge  === 'function') ? assetStatusBadge(a.status || 'active') : esc(a.status || '-');
+                    return '<tr><td style="font-family:var(--font-mono)">' + esc(a.code || '-') + '</td><td>' + esc(a.name || '-') + '</td><td>' + catLbl + '</td><td>' + esc(a.location || '-') + '</td><td>' + stLbl + '</td></tr>';
+                }).join('');
+            }
             const payBody = document.getElementById('myHrPayrollBody');
             payBody.innerHTML = myHRData.payroll.length ? myHRData.payroll.map(p => `<tr><td>${esc(p.month)}</td><td style="font-family:var(--font-mono);">${formatCurrency(p.net)}</td><td><button class="btn btn-sm btn-secondary" onclick="showPayslip('${p.id}')"><i class="fas fa-file-invoice"></i> ${t('payslip')}</button></td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;padding:24px;">${t('noData')}</td></tr>`;
             const lvBody = document.getElementById('myHrLeavesBody');
