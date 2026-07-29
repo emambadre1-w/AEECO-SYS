@@ -442,6 +442,26 @@
                 card.style.display=(!q || name.indexOf(q)!==-1) ? '' : 'none';
             });
         }
+        // يد ظريفة تؤشّر على زر الدليل، وتختفي عند الضغط أو بعد قليل
+        function showGuideHand(btn) {
+            try {
+                const prev = document.querySelector('.guide-hand');
+                if (prev) prev.remove();
+                const hand = document.createElement('span');
+                hand.className = 'guide-hand';
+                hand.setAttribute('aria-hidden', 'true');
+                hand.textContent = '\u261D\uFE0F';
+                btn.appendChild(hand);
+                const remove = () => {
+                    if (!hand.isConnected) return;
+                    hand.classList.add('out');
+                    setTimeout(() => { if (hand.isConnected) hand.remove(); }, 320);
+                };
+                btn.addEventListener('click', remove, { once: true });
+                btn.addEventListener('mouseenter', remove, { once: true });
+                setTimeout(remove, 6000);
+            } catch (e) {}
+        }
         function remindSectionGuide(page) {
             try {
                 const key = 'aeeco_guide_seen_' + page;
@@ -452,7 +472,11 @@
                 const msg = lang === 'en' ? 'Tap the (?) button above for a quick guide to this section' : 'اضغط زر (؟) أعلى الصفحة لدليل سريع عن هذا القسم';
                 showToast('info', title, msg);
                 const btn = document.getElementById('helpBtn');
-                if (btn) { btn.classList.add('guide-pulse'); setTimeout(() => btn.classList.remove('guide-pulse'), 3200); }
+                if (btn) {
+                    btn.classList.add('guide-pulse');
+                    setTimeout(() => btn.classList.remove('guide-pulse'), 3200);
+                    showGuideHand(btn);
+                }
             } catch (e) {}
         }
         function openSectionGuide() {

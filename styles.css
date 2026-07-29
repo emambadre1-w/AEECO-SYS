@@ -319,6 +319,19 @@
         @keyframes stepPulse { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.4);}50%{box-shadow:0 0 0 7px rgba(245,158,11,0);} }
         @keyframes guidePulse { 0%,100%{box-shadow:0 0 0 0 rgba(11,110,79,0.5);}50%{box-shadow:0 0 0 8px rgba(11,110,79,0);} }
         .guide-pulse { animation: guidePulse 1s ease-out 3; border-radius:50%; }
+        /* يد ظريفة تؤشّر على زر الدليل (؟) عند أول دخول لكل قسم */
+        #helpBtn { position: relative; }
+        .guide-hand {
+            position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+            font-size: 22px; line-height: 1; pointer-events: none; z-index: 60;
+            animation: guideHandBob .9s ease-in-out infinite, guideHandIn .35s cubic-bezier(.34,1.56,.64,1);
+            filter: drop-shadow(0 3px 5px rgba(15,23,42,.28));
+        }
+        .guide-hand.out { animation: guideHandOut .3s ease forwards; }
+        @keyframes guideHandBob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-7px); } }
+        @keyframes guideHandIn  { from { opacity:0; transform: translateX(-50%) translateY(10px) scale(.6); } to { opacity:1; } }
+        @keyframes guideHandOut { to { opacity:0; transform: translateX(-50%) translateY(8px) scale(.7); } }
+        @media (prefers-reduced-motion: reduce) { .guide-hand { animation: none; } }
         @keyframes confirmIconPop { 0%{transform:scale(0);opacity:0;} 60%{transform:scale(1.15);opacity:1;} 100%{transform:scale(1);} }
         .req-step-body { flex: 1; padding-top: 6px; }
         .req-step-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
