@@ -247,6 +247,28 @@ async function renderProjectPortfolio(){
             document.getElementById('sidebar').classList.remove('open');
         }
                 // ===== اللوحة التنفيذية — المرحلة 2: المؤشرات من البيانات الحقيقية =====
+        // شريط توزيع القيمة الدفترية حسب فئة الأصل
+        function renderExdAssetsBreakdown(byCat, totalNbv){
+            var box = document.getElementById('exdAssetsBreakdown');
+            if(!box) return;
+            var keys = Object.keys(byCat||{}).filter(function(k){ return byCat[k].nbv > 0; })
+                .sort(function(a,b){ return byCat[b].nbv - byCat[a].nbv; });
+            if(!keys.length || !totalNbv){ box.innerHTML = ''; return; }
+            var pal = { vehicle:'#1D39FF', machinery:'#0B6E4F', device:'#FA4B0E', furniture:'#8B5CF6', building:'#0EA5E9', land:'#16A34A', other:'#64748B' };
+            var lbl = function(k){ return (typeof assetCategoryLabel==='function') ? assetCategoryLabel(k) : k; };
+            var bar = keys.map(function(k){
+                var pct = (byCat[k].nbv/totalNbv)*100;
+                return '<div title="'+lbl(k)+': '+exdMoney(byCat[k].nbv)+'" style="width:'+pct.toFixed(2)+'%;background:'+(pal[k]||'#64748B')+'"></div>';
+            }).join('');
+            var legend = keys.map(function(k){
+                var pct = Math.round((byCat[k].nbv/totalNbv)*100);
+                return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);margin:0 0 6px 16px">'
+                     + '<span style="width:9px;height:9px;border-radius:50%;background:'+(pal[k]||'#64748B')+';display:inline-block"></span>'
+                     + esc(lbl(k))+' <b style="color:var(--text-primary)">'+exdMoney(byCat[k].nbv)+'</b> <span style="opacity:.65">('+pct+'٪ · '+byCat[k].count+')</span></span>';
+            }).join('');
+            box.innerHTML = '<div style="display:flex;height:11px;border-radius:6px;overflow:hidden;background:var(--bg-tertiary);box-shadow:inset 0 1px 2px rgba(15,23,42,.10)">'+bar+'</div>'
+                          + '<div style="margin-top:10px">'+legend+'</div>';
+        }
         async function renderExecDashboard(){
             try{
                 var periodKey = (document.getElementById('exdFilterPeriod')||{}).value || 'q6';
@@ -285,6 +307,20 @@ async function renderProjectPortfolio(){
                 }catch(e){ console.error('exd pr_invoices', e); }
                 const deptSpend = kDaily + kInv + prInv;
                 const profit = income - expense - deptSpend;
+                // ===== الأصول الثابتة: رصيد قائم لا يتأثر بفلتر الفترة =====
+                let asCount = 0, asCost = 0, asDep = 0, asByCat = {};
+                try{
+                    const { data: asRows } = await supabaseClient.from('fixed_assets').select('*');
+                    (asRows||[]).filter(function(a){ var s=a.status||'active'; return s!=='sold' && s!=='written_off'; })
+                    .forEach(function(a){
+                        var d = (typeof computeAssetDepreciation==='function') ? computeAssetDepreciation(a) : {accumulated:0};
+                        var cost = Number(a.cost)||0;
+                        asCount++; asCost += cost; asDep += (d.accumulated||0);
+                        var k = a.category || 'other';
+                        if(!asByCat[k]) asByCat[k] = { count:0, nbv:0 };
+                        asByCat[k].count++; asByCat[k].nbv += (cost - (d.accumulated||0));
+                    });
+                }catch(e){ console.error('exd fixed_assets', e); }
                 // عدّاد متحرّك — يعطي إحساسًا فاخرًا دون المساس بالقيمة النهائية
                 function setNum(id, target, fmt){
                     const el = document.getElementById(id);
@@ -310,6 +346,11 @@ async function renderProjectPortfolio(){
                 setNum('exdDeptKitchenInv', kInv, exdMoney);
                 setNum('exdDeptPrInv', prInv, exdMoney);
                 setNum('exdDeptTotal', kDaily + kInv + prInv, exdMoney);
+                setNum('exdAssetsCount', asCount, _asInt);
+                setNum('exdAssetsCost', asCost, exdMoney);
+                setNum('exdAssetsDep', asDep, exdMoney);
+                setNum('exdAssetsNBV', asCost - asDep, exdMoney);
+                renderExdAssetsBreakdown(asByCat, asCost - asDep);
                 try{ await renderExecCharts(); }catch(e){ console.error('exd charts', e); }
                 try{ renderExecLists(); }catch(e){ console.error('exd lists', e); }
             }catch(e){ console.error('renderExecDashboard error', e); }
