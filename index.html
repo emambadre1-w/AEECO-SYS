@@ -482,7 +482,7 @@
                         <div style="margin-top:12px;font-size:11.5px;color:var(--text-muted);border-top:1px dashed var(--border-color);padding-top:9px" data-i18n="exdDeptSpendNote">هذه المصروفات <b>مخصومة من «صافي الربح»</b> أعلاه وفق فلتر الفترة نفسه. تُحتسب فواتير المطبخ والعلاقات العامة <b>المدفوعة فقط</b> (المعلّقة والملغية مستثناة).</div>
                     </div></div>
 
-                    <div class="exd-card" style="margin-bottom:22px"><div class="ch"><span data-i18n="exdAssetsTitle">الأصول الثابتة</span></div><div class="cb" style="padding:16px 18px">
+                    <div class="exd-card" style="margin-bottom:22px"><div class="ch" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span data-i18n="exdAssetsTitle">الأصول الثابتة</span><button class="btn btn-sm btn-secondary" onclick="navigateTo('assets')"><i class="fas fa-arrow-left"></i> <span data-i18n="viewAssets">عرض السجل</span></button></div><div class="cb" style="padding:16px 18px">
                         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
                             <div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:5px" data-i18n="assetsCount">عدد الأصول</div><div style="font-size:19px;font-weight:700;color:var(--text-primary)" id="exdAssetsCount">—</div></div>
                             <div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:5px" data-i18n="assetsTotalCost">إجمالي التكلفة</div><div style="font-size:19px;font-weight:700;color:var(--text-primary)" id="exdAssetsCost">—</div></div>
