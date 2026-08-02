@@ -24,8 +24,8 @@
             <div class="auth-error" id="authError"></div>
             <form id="loginForm">
                 <div class="form-group"><label class="form-label" data-i18n="email">البريد الإلكتروني</label><div class="input-icon-wrap"><i class="fas fa-envelope input-icon"></i><input type="email" class="form-input" id="loginEmail" name="username" autocomplete="username" required></div></div>
-                <div class="form-group"><label class="form-label" data-i18n="password">كلمة المرور</label><div class="input-icon-wrap"><i class="fas fa-lock input-icon"></i><input type="password" class="form-input" id="loginPassword" name="password" autocomplete="current-password" required></div></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginSubmitBtn"><span data-i18n="login">دخول</span></button><div style="text-align:center;margin-top:12px"><a id="forgotPasswordLink" style="cursor:pointer;color:var(--primary);font-size:13px" data-i18n="forgotPassword">نسيت كلمة المرور؟</a></div>
+                <div class="form-group"><label class="form-label" data-i18n="password">كلمة المرور</label><div class="input-icon-wrap"><i class="fas fa-lock input-icon"></i><input type="password" class="form-input" id="loginPassword" name="password" autocomplete="current-password" required><button type="button" class="pw-eye" onclick="toggleLoginPassword(this)" aria-label="إظهار كلمة المرور"><i class="fas fa-eye"></i></button></div></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginSubmitBtn"><span class="btn-ar" data-i18n="login">دخول</span><span class="btn-en">LOG IN</span></button><div style="text-align:center;margin-top:12px"><a id="forgotPasswordLink" style="cursor:pointer;color:var(--primary);font-size:13px" data-i18n="forgotPassword">نسيت كلمة المرور؟</a></div>
             </form>
             <form id="resetForm" style="display:none">
                 <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px" data-i18n="resetInstructions">اكتب بريدك الإلكتروني وحنرسل لك رابط لإعادة تعيين كلمة المرور.</p>
@@ -482,7 +482,7 @@
                         <div style="margin-top:12px;font-size:11.5px;color:var(--text-muted);border-top:1px dashed var(--border-color);padding-top:9px" data-i18n="exdDeptSpendNote">هذه المصروفات <b>مخصومة من «صافي الربح»</b> أعلاه وفق فلتر الفترة نفسه. تُحتسب فواتير المطبخ والعلاقات العامة <b>المدفوعة فقط</b> (المعلّقة والملغية مستثناة).</div>
                     </div></div>
 
-                    <div class="exd-card" style="margin-bottom:22px"><div class="ch" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span data-i18n="exdAssetsTitle">الأصول الثابتة</span><button class="btn btn-sm btn-secondary" onclick="navigateTo('assets')"><i class="fas fa-arrow-left"></i> <span data-i18n="viewAssets">عرض السجل</span></button></div><div class="cb" style="padding:16px 18px">
+                    <div class="exd-card" style="margin-bottom:22px"><div class="ch" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span data-i18n="exdAssetsTitle">الأصول الثابتة</span><button class="btn btn-sm btn-secondary app-hidden" id="exdAssetsViewBtn" onclick="navigateTo('assets')"><i class="fas fa-arrow-left"></i> <span data-i18n="viewAssets">عرض السجل</span></button></div><div class="cb" style="padding:16px 18px">
                         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
                             <div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:5px" data-i18n="assetsCount">عدد الأصول</div><div style="font-size:19px;font-weight:700;color:var(--text-primary)" id="exdAssetsCount">—</div></div>
                             <div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:5px" data-i18n="assetsTotalCost">إجمالي التكلفة</div><div style="font-size:19px;font-weight:700;color:var(--text-primary)" id="exdAssetsCost">—</div></div>
@@ -491,6 +491,11 @@
                         </div>
                         <div id="exdAssetsBreakdown" style="margin-top:14px"></div>
                         <div style="margin-top:12px;font-size:11.5px;color:var(--text-muted);border-top:1px dashed var(--border-color);padding-top:9px" data-i18n="exdAssetsNote">قيمة ممتلكات الشركة الحالية بعد خصم الإهلاك. لا تتأثر بفلتر الفترة أعلاه لأنها رصيد قائم وليست حركة، والأصول المباعة والمشطوبة مستثناة.</div>
+                    </div></div>
+
+                    <div class="exd-card" style="margin-bottom:22px"><div class="ch"><span data-i18n="exdDeptsTitle">نظرة على الأقسام</span></div><div class="cb" style="padding:16px 18px">
+                        <div id="exdDeptsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px"></div>
+                        <div style="margin-top:12px;font-size:11.5px;color:var(--text-muted);border-top:1px dashed var(--border-color);padding-top:9px" data-i18n="exdDeptsNote">ملخّص لحظي لكل قسم. الأرقام هنا أرصدة قائمة (لا تتأثر بفلتر الفترة) ما لم يُذكر خلاف ذلك.</div>
                     </div></div>
 
                     <div class="exd-grid g2">

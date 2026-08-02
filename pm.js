@@ -269,6 +269,50 @@ async function renderProjectPortfolio(){
             box.innerHTML = '<div style="display:flex;height:11px;border-radius:6px;overflow:hidden;background:var(--bg-tertiary);box-shadow:inset 0 1px 2px rgba(15,23,42,.10)">'+bar+'</div>'
                           + '<div style="margin-top:10px">'+legend+'</div>';
         }
+        // بطاقات ملخّص الأقسام — تُغني المدير العام عن دخول الأقسام
+        async function renderExdDepartments(){
+            var box = document.getElementById('exdDeptsGrid');
+            if(!box) return;
+            var out = [];
+            function tile(icon, color, label, value, sub){
+                return '<div style="background:var(--bg-tertiary);border-radius:10px;padding:13px 14px">'
+                     + '<div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-secondary);margin-bottom:6px">'
+                     + '<i class="fas '+icon+'" style="color:'+color+'"></i>'+esc(label)+'</div>'
+                     + '<div style="font-size:18px;font-weight:800;color:var(--text-primary)">'+value+'</div>'
+                     + (sub ? '<div style="font-size:11px;color:var(--text-muted);margin-top:3px">'+sub+'</div>' : '')
+                     + '</div>';
+            }
+            try{
+                var r = await Promise.all([
+                    supabaseClient.from('employees').select('id,status'),
+                    supabaseClient.from('products').select('id,stock'),
+                    supabaseClient.from('tickets').select('id,status'),
+                    supabaseClient.from('invoices').select('id,status,amount'),
+                    supabaseClient.from('secretary_appointments').select('id,appt_date,status'),
+                    supabaseClient.from('pm_projects').select('id,status'),
+                    supabaseClient.from('kitchen_items').select('id')
+                ]);
+                var emps = (r[0].data||[]).filter(function(e){ return (e.status||'active')!=='terminated'; });
+                var prods = r[1].data||[];
+                var low = prods.filter(function(p){ return (Number(p.stock)||0) < 10; }).length;
+                var tix = (r[2].data||[]).filter(function(t){ return t.status!=='closed' && t.status!=='resolved'; }).length;
+                var unpaid = (r[3].data||[]).filter(function(i){ return i.status!=='paid'; });
+                var unpaidSum = unpaid.reduce(function(s,i){ return s+(Number(i.amount)||0); }, 0);
+                var today = new Date().toISOString().slice(0,10);
+                var appts = (r[4].data||[]).filter(function(a){ return a.appt_date===today && a.status==='upcoming'; }).length;
+                var projs = (r[5].data||[]).filter(function(p){ return p.status==='active' || p.status==='in_progress'; }).length;
+                var kitems = (r[6].data||[]).length;
+
+                out.push(tile('fa-users','#1D39FF','الموظفون', String(emps.length), 'على رأس العمل'));
+                out.push(tile('fa-boxes-stacked','#0B6E4F','المخزون', String(prods.length)+' صنف', low ? (low+' صنف منخفض') : 'لا نواقص'));
+                out.push(tile('fa-diagram-project','#8B5CF6','المشاريع', String(projs), 'مشروع نشط'));
+                out.push(tile('fa-file-invoice-dollar','#FA4B0E','فواتير غير مسدّدة', exdMoney(unpaidSum), String(unpaid.length)+' فاتورة'));
+                out.push(tile('fa-headset','#0EA5E9','تذاكر مفتوحة', String(tix), 'الدعم الفني'));
+                out.push(tile('fa-calendar-day','#16A34A','مواعيد اليوم', String(appts), 'السكرتارية'));
+                out.push(tile('fa-utensils','#B45309','أصناف المطبخ', String(kitems), 'في السجل'));
+            }catch(e){ console.error('exd departments', e); }
+            box.innerHTML = out.join('') || '<div style="font-size:12px;color:var(--text-muted)">لا توجد بيانات</div>';
+        }
         async function renderExecDashboard(){
             try{
                 var periodKey = (document.getElementById('exdFilterPeriod')||{}).value || 'q6';
@@ -351,6 +395,9 @@ async function renderProjectPortfolio(){
                 setNum('exdAssetsDep', asDep, exdMoney);
                 setNum('exdAssetsNBV', asCost - asDep, exdMoney);
                 renderExdAssetsBreakdown(asByCat, asCost - asDep);
+                renderExdDepartments();
+                var _avb = document.getElementById('exdAssetsViewBtn');
+                if (_avb) _avb.classList.toggle('app-hidden', !((ROLE_PAGES[currentUser.role]||[]).includes('assets')));
                 try{ await renderExecCharts(); }catch(e){ console.error('exd charts', e); }
                 try{ renderExecLists(); }catch(e){ console.error('exd lists', e); }
             }catch(e){ console.error('renderExecDashboard error', e); }
