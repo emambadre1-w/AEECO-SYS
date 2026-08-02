@@ -33,9 +33,9 @@
             const _exAllBtn = document.getElementById('btnExportAllExcel'); if (_exAllBtn) _exAllBtn.classList.toggle('app-hidden', !_isTopRole);
         }
         // ===================== Employee Requests Module =====================
-        function toggleAmountField() { const type = document.getElementById('reqType').value; const showAmount = type === 'expense' || type === 'purchase' || type === 'financial_certification'; document.getElementById('reqAmountGroup').classList.toggle('app-hidden', !showAmount); const lg = document.getElementById('reqLeaveGroup'); if(lg) lg.classList.toggle('app-hidden', type !== 'leave'); const fc = document.getElementById('reqFinCertGroup'); if(fc) fc.classList.toggle('app-hidden', type !== 'financial_certification'); const dcb = document.getElementById('reqDirectCertBtn'); if(dcb) dcb.classList.toggle('app-hidden', !(type === 'financial_certification' && currentUser && ['admin','secretary'].includes(currentUser.role))); renderStagePreview(type); }
+        function toggleAmountField() { const type = document.getElementById('reqType').value; const showAmount = type === 'expense' || type === 'purchase' || type === 'financial_certification'; document.getElementById('reqAmountGroup').classList.toggle('app-hidden', !showAmount); const lg = document.getElementById('reqLeaveGroup'); if(lg) lg.classList.toggle('app-hidden', type !== 'leave'); const fc = document.getElementById('reqFinCertGroup'); if(fc) fc.classList.toggle('app-hidden', type !== 'financial_certification'); const dcb = document.getElementById('reqDirectCertBtn'); if(dcb) dcb.classList.toggle('app-hidden', !(type === 'financial_certification' && currentUser && ['admin','gm'].includes(currentUser.role))); renderStagePreview(type); }
         async function submitAndCertifyNow(){
-            if (!currentUser || !['admin','secretary'].includes(currentUser.role)) { showToast('error', t('accessDenied'), t('accessDeniedMsg')); return; }
+            if (!currentUser || !['admin','gm'].includes(currentUser.role)) { showToast('error', t('accessDenied'), t('accessDeniedMsg')); return; }
             const title = document.getElementById('reqTitle').value.trim();
             const description = document.getElementById('reqDescription').value.trim();
             const amount = document.getElementById('reqAmount').value;
