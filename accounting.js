@@ -79,7 +79,7 @@
             if (inv) { const cur2 = inv.value; inv.innerHTML = opts; inv.value = cur2; }
         }
 
-        function canEditAccounting() { return !(currentUser && currentUser.role === 'internal_auditor'); }
+        function canEditAccounting() { return canEditData(); }
         function printInvoice(id) {
             const inv = (data.invoices||[]).find(x => String(x.id) === String(id));
             if (!inv) return;
