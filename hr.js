@@ -70,7 +70,7 @@
                 printFinancialCertification(inserted.id);
             }catch(e){
                 console.error('submitAndCertifyNow', e);
-                showToast('error', 'تعذّر الحفظ', String((e&&e.message)||e));
+                showToast('error', t('msg_de0332'), String((e&&e.message)||e));
             }
         }
         async function submitNewRequest() { const type = document.getElementById('reqType').value; const title = document.getElementById('reqTitle').value.trim(); const description = document.getElementById('reqDescription').value.trim(); const amount = document.getElementById('reqAmount').value; if (!title || !description) { showToast('warning', t('fillRequired'), ''); return; } if ((type === 'expense' || type === 'purchase' || type === 'financial_certification') && !(parseFloat(amount) > 0)) { showToast('warning', t('amountRequired'), ''); return; }
@@ -95,11 +95,11 @@
                 beneficiary: document.getElementById('reqBeneficiary').value.trim() || null,
                 attached_docs: _docs.join('، ') || null
             };
-        } if (_editReqId) { const _upd = Object.assign({ title, description, amount: amount ? parseFloat(amount) : null }, _leaveExtra); const { error: _ee } = await supabaseClient.from('employee_requests').update(_upd).eq('id', _editReqId).eq('requester_id', currentUser.id); _editReqId = null; if (_ee) { showToast('error', 'Error', _ee.message); return; } closeModal('newRequestModal'); showToast('success', 'تم تعديل الطلب', title); var _rt2=document.getElementById('reqType'); if(_rt2) _rt2.disabled=false; await loadRequestsModule(); await renderRoleDashboard(); return; }
+        } if (_editReqId) { const _upd = Object.assign({ title, description, amount: amount ? parseFloat(amount) : null }, _leaveExtra); const { error: _ee } = await supabaseClient.from('employee_requests').update(_upd).eq('id', _editReqId).eq('requester_id', currentUser.id); _editReqId = null; if (_ee) { showToast('error', 'Error', _ee.message); return; } closeModal('newRequestModal'); showToast('success', t('msg_d1e248'), title); var _rt2=document.getElementById('reqType'); if(_rt2) _rt2.disabled=false; await loadRequestsModule(); await renderRoleDashboard(); return; }
         const _allStages = REQUEST_ROUTES[type] || []; const stages = _allStages.filter(st => st !== currentUser.role); const _autoApprove = stages.length === 0; const payload = Object.assign({ requester_id: currentUser.id, type, title, description, amount: amount ? parseFloat(amount) : null, current_stage: _autoApprove ? null : stages[0], status: _autoApprove ? 'approved' : 'pending', stage_history: [] }, _fcExtra, _leaveExtra); const { error } = await supabaseClient.from('employee_requests').insert(payload); if (error) { showToast('error', 'Error', error.message); return; } closeModal('newRequestModal'); showToast('success', t('requestSubmitted'), title); if (!_autoApprove) { await notifyRole(stages[0], `📋 طلب جديد: ${title}`, `من ${currentUser.full_name} — ${t('reqType'+type.charAt(0).toUpperCase()+type.slice(1))}`, 'info', 'requests'); notifyApproverEmail(stages[0], title, type, currentUser.full_name); } await loadRequestsModule(); await renderRoleDashboard(); }
         async function loadRequestsModule() { const { data: reqs, error } = await supabaseClient.from('employee_requests').select('*').order('created_at', { ascending: false }); if (error) { console.error(error); return; } allRequestsCache = reqs || []; const { data: profs } = await supabaseClient.from('profiles').select('*'); profilesCache = {}; (profs || []).forEach(p => profilesCache[p.id] = p); if (!profilesCache[currentUser.id]) profilesCache[currentUser.id] = currentUser; const pendingForMe = allRequestsCache.filter(r => r.status === 'pending' && canActOnRequest(r)).length; const badge = document.getElementById('pendingApprovalsCount'); if (pendingForMe > 0) { badge.textContent = pendingForMe; badge.classList.remove('app-hidden'); } else { badge.classList.add('app-hidden'); } renderRequestsTable(); }
         async function deleteRequest(id){
-            if(!(await confirmStyled('متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.', {type:'danger'}))) return;
+            if(!(await confirmStyled(t('msg_717d59'), {type:'danger'}))) return;
             const _idx = allRequestsCache.findIndex(function(r){ return r.id===id; });
             const _backup = _idx>=0 ? allRequestsCache[_idx] : null;
             if(_idx>=0){ allRequestsCache.splice(_idx,1); renderRequestsTable(); }
@@ -113,7 +113,7 @@
                 await renderRoleDashboard();
             }catch(e){
                 console.error('deleteRequest', e);
-                showToast('error', 'تعذّر الحذف', String((e&&e.message)||e));
+                showToast('error', t('msg_277e1c'), String((e&&e.message)||e));
                 if(_backup){ allRequestsCache.push(_backup); renderRequestsTable(); }
             }
         }
@@ -192,7 +192,7 @@
                 + (canDeleteReq ? `<button class="btn btn-secondary" onclick="deleteRequest('${req.id}');closeModal('requestDetailModal')"><i class="fas fa-trash"></i> حذف</button>` : '');
             openModal('requestDetailModal');
         }
-        async function decideRequest(id, decision) { const req = allRequestsCache.find(r => r.id === id); if (!req) return; if (!profilesCache[req.requester_id]) { const { data: _profs } = await supabaseClient.from('profiles').select('*'); (_profs||[]).forEach(p => profilesCache[p.id] = p); } if (decision === 'approved' && req.requester_id === currentUser.id && currentUser.role !== 'gm' && currentUser.role !== 'admin') { showToast('warning', t('cannotSelfApprove'), ''); return; } let comment = ''; if (decision === 'rejected') comment = prompt(t('rejectReasonPrompt')) || ''; const _reqRole = (profilesCache[req.requester_id] && profilesCache[req.requester_id].role) || null; const stages = (REQUEST_ROUTES[req.type] || []).filter(st => st !== _reqRole); if (!Array.isArray(stages) || !stages.length) { showToast('error', 'نوع طلب غير معروف', 'تعذّر تحديد مسار الموافقة لهذا الطلب'); return; } const idx = stages.indexOf(req.current_stage); const historyEntry = { stage: req.current_stage, approver_id: currentUser.id, approver_name: currentUser.full_name, decision, comment, at: new Date().toISOString(), signature_url: currentUser.signature_url || null }; const newHistory = [...(req.stage_history || []), historyEntry]; let update = { stage_history: newHistory }; if (decision === 'rejected') { update.status = 'rejected'; update.current_stage = null; } else if (idx === stages.length - 1) { update.status = 'approved'; update.current_stage = null; } else { update.current_stage = stages[idx + 1]; } const { error } = await supabaseClient.from('employee_requests').update(update).eq('id', id); if (error) { showToast('error', 'تعذّر حفظ القرار', error.message); return; } showToast('success', t('decisionRecorded'), req.title);
+        async function decideRequest(id, decision) { const req = allRequestsCache.find(r => r.id === id); if (!req) return; if (!profilesCache[req.requester_id]) { const { data: _profs } = await supabaseClient.from('profiles').select('*'); (_profs||[]).forEach(p => profilesCache[p.id] = p); } if (decision === 'approved' && req.requester_id === currentUser.id && currentUser.role !== 'gm' && currentUser.role !== 'admin') { showToast('warning', t('cannotSelfApprove'), ''); return; } let comment = ''; if (decision === 'rejected') comment = prompt(t('rejectReasonPrompt')) || ''; const _reqRole = (profilesCache[req.requester_id] && profilesCache[req.requester_id].role) || null; const stages = (REQUEST_ROUTES[req.type] || []).filter(st => st !== _reqRole); if (!Array.isArray(stages) || !stages.length) { showToast('error', t('msg_f54bf2'), t('msg_5eec9f')); return; } const idx = stages.indexOf(req.current_stage); const historyEntry = { stage: req.current_stage, approver_id: currentUser.id, approver_name: currentUser.full_name, decision, comment, at: new Date().toISOString(), signature_url: currentUser.signature_url || null }; const newHistory = [...(req.stage_history || []), historyEntry]; let update = { stage_history: newHistory }; if (decision === 'rejected') { update.status = 'rejected'; update.current_stage = null; } else if (idx === stages.length - 1) { update.status = 'approved'; update.current_stage = null; } else { update.current_stage = stages[idx + 1]; } const { error } = await supabaseClient.from('employee_requests').update(update).eq('id', id); if (error) { showToast('error', t('msg_acf565'), error.message); return; } showToast('success', t('decisionRecorded'), req.title);
         if (req.type === 'leave' && update.status === 'approved' && req.from_date && req.to_date) {
             try {
                 const { data: linkedEmp } = await supabaseClient.from('employees').select('id').eq('profileId', req.requester_id).limit(1);
@@ -280,7 +280,7 @@
             const _ec=document.getElementById('editUserCodeInput'); const _ed=document.getElementById('editUserDeptInput'); const _code=_ec?_ec.value.trim():''; const _dept=_ed?_ed.value.trim():''; const { error } = await supabaseClient.from('profiles').update({ full_name: name, employee_code: _code || null, department: _dept || null }).eq('id', id);
             if(error){ showToast('error', 'Error', error.message); return; }
             closeModal('editUserNameModal');
-            showToast('success','تم تحديث البيانات','');
+            showToast('success',t('msg_a87a9b'),'');
             await loadUsersModule();
             if(id === currentUser.id){ currentUser.full_name = name; if(typeof updateUserMenu==='function') updateUserMenu(); }
         }
@@ -465,14 +465,14 @@
         }
         async function generateMonthlyPayroll(){
             var monthInput = document.getElementById('payrollGenMonth');
-            if(!monthInput || !monthInput.value){ showToast('warning','اختر الشهر أولاً',''); return; }
+            if(!monthInput || !monthInput.value){ showToast('warning',t('msg_32987a'),''); return; }
             var monthStr = monthInput.value;
             var emps = (data.employees||[]).filter(function(e){ return (e.status||'active')==='active'; });
             var existing = {};
             (data.payroll||[]).forEach(function(p){ if(p.month===monthStr) existing[p.employeeId]=true; });
             var toCreate = emps.filter(function(e){ return !existing[e.id]; });
-            if(toCreate.length===0){ showToast('info','لا يوجد موظفون جدد','كل الموظفين النشطين عندهم راتب مسجّل بالفعل لهذا الشهر'); return; }
-            if(!(await confirmStyled('هيتم توليد '+toCreate.length+' كشف راتب لشهر '+monthStr+'. تقدر تراجع وتعدّل كل واحد بعدها. متابعة؟', {type:'warning', okLabel:'توليد الرواتب'}))) return;
+            if(toCreate.length===0){ showToast('info',t('msg_dc80ca'),t('msg_56844f')); return; }
+            if(!(await confirmStyled(t('msg_315bf0')+toCreate.length+' كشف راتب لشهر '+monthStr+'. تقدر تراجع وتعدّل كل واحد بعدها. متابعة؟', {type:'warning', okLabel:t('msg_5278f0')}))) return;
             var created=0;
             for(var i=0;i<toCreate.length;i++){
                 var e = toCreate[i];
@@ -487,7 +487,7 @@
                     if(!res.error) created++;
                 }catch(err){ console.error('generateMonthlyPayroll', err); }
             }
-            showToast('success', 'تم توليد '+created+' كشف راتب', 'راجع كل كشف وعدّل البدلات أو الخصومات لو محتاج قبل الاعتماد النهائي');
+            showToast('success', t('msg_d3ed4f')+created+' كشف راتب', 'راجع كل كشف وعدّل البدلات أو الخصومات لو محتاج قبل الاعتماد النهائي');
             await loadPayroll();
         }
         
@@ -511,12 +511,12 @@
         }
         async function uploadEmployeeDocument() {
             const empId = document.getElementById('employeeId').value;
-            if (!empId) { showToast('warning', 'احفظ الموظف أولاً', 'ثم عاود فتح التعديل لإضافة مستندات'); return; }
+            if (!empId) { showToast('warning', t('msg_0e025d'), t('msg_cce93e')); return; }
             const label = document.getElementById('empDocLabel').value.trim();
             const fileInput = document.getElementById('empDocFile');
             const file = fileInput && fileInput.files[0];
-            if (!file) { showToast('warning', 'اختر ملف أولاً', ''); return; }
-            if (!label) { showToast('warning', 'اكتب اسم المستند', 'مثال: نسخة العقد'); return; }
+            if (!file) { showToast('warning', t('msg_b8aae5'), ''); return; }
+            if (!label) { showToast('warning', t('msg_b49f1a'), t('msg_52825b')); return; }
             const status = document.getElementById('empDocUploadStatus');
             status.textContent = 'جارٍ الرفع...';
             try {
@@ -534,11 +534,11 @@
                 showToast('success', t('dataSaved'), label);
             } catch (e) {
                 status.textContent = '';
-                showToast('error', 'تعذّر رفع المستند', e.message || '');
+                showToast('error', t('msg_aa2ea0'), e.message || '');
             }
         }
         async function deleteEmployeeDocument(id, employeeId) {
-            if (!(await confirmStyled('هل أنت متأكد من حذف هذا المستند؟', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_334bab'), {type:'danger'}))) return;
             const { error } = await supabaseClient.from('employee_documents').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('HR', 'delete', 'مستند موظف');
@@ -590,7 +590,7 @@
             const lockChk = document.getElementById('offboardLockAccount');
             if (lockChk && lockChk.checked && employee.profileId) {
                 const { error: roleErr } = await supabaseClient.from('profiles').update({ role: 'disabled' }).eq('id', employee.profileId);
-                if (roleErr) { showToast('error', 'تعذّر قفل الحساب', roleErr.message); }
+                if (roleErr) { showToast('error', t('msg_3e686b'), roleErr.message); }
                 else { logActivity('Users', 'update', employee.name + ' — قفل الوصول'); }
             }
             closeModal('offboardModal');
@@ -697,7 +697,7 @@
         function leaveBalance(emp) { const ent = (emp.annualLeave != null && emp.annualLeave !== '') ? (parseFloat(emp.annualLeave) || 0) : 21; const used = usedAnnualLeave(emp.id); return { entitlement: ent, used: used, remaining: ent - used }; }
         function renderLeaveBalances() { const tbody = document.getElementById('leaveBalancesBody'); if (!tbody) return; if (!data.employees || data.employees.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-muted)">${t('noData')}</td></tr>`; return; } tbody.innerHTML = data.employees.map(emp => { const b = leaveBalance(emp); const remColor = b.remaining <= 0 ? 'var(--danger)' : (b.remaining <= 5 ? 'var(--warning)' : 'var(--success)'); return `<tr><td>${esc(emp.name)}</td><td>${b.entitlement} ${t('day')}</td><td>${b.used} ${t('day')}</td><td style="font-weight:600;color:${remColor}">${b.remaining} ${t('day')}</td></tr>`; }).join(''); }
         async function deleteLeave(id) { if (!(await confirmStyled(t('confirmDelete'), {type:'danger'}))) return; const { error } = await supabaseClient.from('leaves').delete().eq('id', id); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Leave', 'delete', id); await loadLeaves(); showToast('success', t('dataDeleted'), ''); }
-        async function approveLeave(id, decision) { const leave = data.leaves.find(l => l.id === id); if (decision === 'approved' && leave && leave.type === 'annual') { const emp = data.employees.find(e => e.id === leave.employeeId); if (emp && leaveDays(leave) > leaveBalance(emp).remaining) { if (!(await confirmStyled(t('exceedsBalance'), {type:'warning', okLabel:'موافقة رغم ذلك'}))) return; } } const { error } = await supabaseClient.from('leaves').update({ status: decision }).eq('id', id); if (error) { showToast('error', 'Error', error.message); return; } const employee = data.employees.find(e => e.id === leave?.employeeId); logActivity('Leave', 'update', `${employee?.name || ''} - ${t('status' + decision.charAt(0).toUpperCase() + decision.slice(1))}`); await loadLeaves(); showToast('success', t('decisionRecorded'), ''); }
+        async function approveLeave(id, decision) { const leave = data.leaves.find(l => l.id === id); if (decision === 'approved' && leave && leave.type === 'annual') { const emp = data.employees.find(e => e.id === leave.employeeId); if (emp && leaveDays(leave) > leaveBalance(emp).remaining) { if (!(await confirmStyled(t('exceedsBalance'), {type:'warning', okLabel:t('msg_d6720e')}))) return; } } const { error } = await supabaseClient.from('leaves').update({ status: decision }).eq('id', id); if (error) { showToast('error', 'Error', error.message); return; } const employee = data.employees.find(e => e.id === leave?.employeeId); logActivity('Leave', 'update', `${employee?.name || ''} - ${t('status' + decision.charAt(0).toUpperCase() + decision.slice(1))}`); await loadLeaves(); showToast('success', t('decisionRecorded'), ''); }
         async function savePayroll() { const num = id => parseFloat(document.getElementById(id).value) || 0; const basic = num('payrollBasic'), allowances = num('payrollAllowances'), overtime = num('payrollOvertime'), insurance = num('payrollInsurance'), tax = num('payrollTax'), ded = num('payrollDeductions'); const gross = basic + allowances + overtime; const net = gross - insurance - tax - ded; const payroll = {id: generateId(), employeeId: document.getElementById('payrollEmployee').value, month: document.getElementById('payrollMonth').value, basic: basic, allowances: allowances, overtime: overtime, insurance: insurance, tax: tax, deductions: ded, net: net, createdAt: new Date().toISOString()}; const employee = data.employees.find(e => e.id === payroll.employeeId); const { error } = await supabaseClient.from('payroll').insert(payroll); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Payroll', 'create', `${employee?.name || 'Unknown'} - ${payroll.month}`); await loadPayroll(); closeModal('payrollModal'); showToast('success', t('dataSaved'), ''); }
         function fillBasicFromEmployee() {
             const emp = data.employees.find(e => e.id === document.getElementById('payrollEmployee').value);

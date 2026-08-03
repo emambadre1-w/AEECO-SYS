@@ -31,25 +31,25 @@
         async function saveBooksClosing() {
             if (!(currentUser && ['gm','admin'].includes(currentUser.role))) { showToast('error', t('accessDenied'), t('accessDeniedMsg')); return; }
             const val = document.getElementById('booksClosedBefore').value || null;
-            if (!val) { showToast('warning', 'اختر التاريخ أولاً', ''); return; }
-            if (!(await confirmStyled('سيتم إقفال كل الفترات المحاسبية قبل ' + formatDate(val) + '.\nلن يمكن بعدها إضافة أو تعديل أي قيد بتاريخ سابق لهذا التاريخ. متابعة؟', {type:'warning', title:'إقفال الفترات', okLabel:'إقفال'}))) return;
+            if (!val) { showToast('warning', t('msg_e555b1'), ''); return; }
+            if (!(await confirmStyled(t('msg_296889') + formatDate(val) + '.\nلن يمكن بعدها إضافة أو تعديل أي قيد بتاريخ سابق لهذا التاريخ. متابعة؟', {type:'warning', title:t('msg_47c5ac'), okLabel:t('msg_1a321f')}))) return;
             const { error } = await supabaseClient.from('accounting_settings').upsert({ id: 1, books_closed_before: val, updated_by: currentUser.id, updated_at: new Date().toISOString() });
-            if (error) { showToast('error', 'تعذّر حفظ الإقفال', error.message); return; }
+            if (error) { showToast('error', t('msg_07b913'), error.message); return; }
             booksClosedBefore = val;
             logActivity('Accounting', 'update', 'إقفال الفترات قبل ' + val);
             renderBooksClosingStatus();
-            showToast('success', 'تم الإقفال', formatDate(val));
+            showToast('success', t('msg_728e8e'), formatDate(val));
         }
         async function clearBooksClosing() {
             if (!(currentUser && ['gm','admin'].includes(currentUser.role))) { showToast('error', t('accessDenied'), t('accessDeniedMsg')); return; }
-            if (!(await confirmStyled('سيتم إلغاء الإقفال وفتح كل الفترات للتعديل مرة أخرى. متابعة؟', {type:'warning', title:'إلغاء الإقفال', okLabel:'إلغاء الإقفال'}))) return;
+            if (!(await confirmStyled(t('msg_1a9ad7'), {type:'warning', title:t('cancelClosing'), okLabel:t('cancelClosing')}))) return;
             const { error } = await supabaseClient.from('accounting_settings').upsert({ id: 1, books_closed_before: null, updated_by: currentUser.id, updated_at: new Date().toISOString() });
-            if (error) { showToast('error', 'تعذّر إلغاء الإقفال', error.message); return; }
+            if (error) { showToast('error', t('msg_6bf3c3'), error.message); return; }
             booksClosedBefore = null;
             document.getElementById('booksClosedBefore').value = '';
             logActivity('Accounting', 'update', 'إلغاء إقفال الفترات');
             renderBooksClosingStatus();
-            showToast('success', 'تم إلغاء الإقفال', '');
+            showToast('success', t('msg_2913c8'), '');
         }
         // ===================== مرفق الإيصال =====================
         async function uploadTransactionReceipt(file, txnId) {
@@ -137,13 +137,13 @@
             const id = document.getElementById('transactionId').value || generateId();
             const isNew = !document.getElementById('transactionId').value;
             const _txDate = document.getElementById('transactionDate').value || null;
-            if (isDateClosed(_txDate)) { showToast('error', 'فترة مقفلة', 'الدفاتر مقفلة قبل ' + formatDate(booksClosedBefore) + ' — لا يمكن تسجيل قيد بهذا التاريخ.'); return; }
+            if (isDateClosed(_txDate)) { showToast('error', t('msg_7615ab'), t('msg_2de220') + formatDate(booksClosedBefore) + ' — لا يمكن تسجيل قيد بهذا التاريخ.'); return; }
             const transaction = {id: id, type: document.getElementById('transactionType').value, amount: parseFloat(document.getElementById('transactionAmount').value), description: document.getElementById('transactionDescription').value, category: document.getElementById('transactionCategory').value, accountId: document.getElementById('transactionAccount').value || null, date: document.getElementById('transactionDate').value || null, createdAt: isNew ? new Date().toISOString() : (data.transactions.find(t => t.id === id)?.createdAt || new Date().toISOString())};
             const _rcFile = (document.getElementById('transactionReceipt') || {}).files && document.getElementById('transactionReceipt').files[0];
             if (_rcFile) {
                 const _st = document.getElementById('txnReceiptStatus'); if (_st) _st.textContent = 'جارٍ رفع المرفق...';
                 try { transaction.receipt_path = await uploadTransactionReceipt(_rcFile, id); if (_st) _st.textContent = ''; }
-                catch (e) { if (_st) _st.textContent = ''; showToast('error', 'تعذّر رفع المرفق', e.message || ''); return; }
+                catch (e) { if (_st) _st.textContent = ''; showToast('error', t('msg_1a1e41'), e.message || ''); return; }
             } else if (!isNew) {
                 const _prev = data.transactions.find(t => t.id === id);
                 if (_prev && _prev.receipt_path) transaction.receipt_path = _prev.receipt_path;
@@ -168,13 +168,13 @@
         async function reverseTransaction(id) {
             const orig = data.transactions.find(t => t.id === id);
             if (!orig) return;
-            if (orig.reversed_by) { showToast('warning', 'معكوس مسبقًا', 'هذا القيد له قيد عكسي بالفعل'); return; }
-            if (orig.reverses_id) { showToast('warning', 'غير مسموح', 'لا يمكن عكس قيد عكسي'); return; }
+            if (orig.reversed_by) { showToast('warning', t('msg_041087'), t('msg_c80a72')); return; }
+            if (orig.reverses_id) { showToast('warning', t('msg_04edd0'), t('msg_1a9688')); return; }
             const label = '#' + (orig.entry_no != null ? orig.entry_no : '') + ' — ' + (orig.description || '');
             const msg = 'سيتم إنشاء قيد عكسي يلغي أثر هذا القيد ماليًا:\n' + label + '\nالمبلغ: ' + formatCurrency(orig.amount) + '\n\nالقيد الأصلي يبقى في السجل للمراجعة ولا يُحذف. متابعة؟';
-            if (!(await confirmStyled(msg, {type:'warning', title:'إنشاء قيد عكسي', okLabel:'إنشاء القيد العكسي'}))) return;
+            if (!(await confirmStyled(msg, {type:'warning', title:t('msg_daaeef'), okLabel:t('msg_2315bb')}))) return;
             const _revDate = new Date().toISOString().slice(0,10);
-            if (isDateClosed(_revDate)) { showToast('error', 'فترة مقفلة', 'تاريخ اليوم يقع ضمن فترة مقفلة — لا يمكن إنشاء قيد عكسي.'); return; }
+            if (isDateClosed(_revDate)) { showToast('error', t('msg_7615ab'), t('msg_3f5941')); return; }
             const revId = generateId();
             const reversal = {
                 id: revId,
@@ -188,12 +188,12 @@
                 createdAt: new Date().toISOString()
             };
             const { error: e1 } = await supabaseClient.from('transactions').insert(reversal);
-            if (e1) { showToast('error', 'تعذّر إنشاء القيد العكسي', e1.message); return; }
+            if (e1) { showToast('error', t('msg_1f8aa5'), e1.message); return; }
             const { error: e2 } = await supabaseClient.from('transactions').update({ reversed_by: revId }).eq('id', orig.id);
-            if (e2) { showToast('error', 'تم إنشاء القيد العكسي لكن تعذّر ربطه بالأصل', e2.message); }
+            if (e2) { showToast('error', t('msg_04d360'), e2.message); }
             logActivity('Accounting', 'create', 'قيد عكسي لـ ' + label);
             await loadTransactions();
-            showToast('success', 'تم إنشاء القيد العكسي', formatCurrency(orig.amount));
+            showToast('success', t('msg_2acd61'), formatCurrency(orig.amount));
         }
         async function deleteTransaction(id) { if (!(await confirmStyled(t('confirmDelete'), {type:'danger'}))) return; const trans = data.transactions.find(t => t.id === id); const { error } = await supabaseClient.from('transactions').delete().eq('id', id); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Accounting', 'delete', trans?.description || id); await loadTransactions(); showToast('success', t('dataDeleted'), ''); }
         function updateAccountingStats() { const income = data.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0); const expenses = data.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0); const balance = income - expenses; document.getElementById('statIncome').textContent = formatCurrency(income); document.getElementById('statExpenses').textContent = formatCurrency(expenses); document.getElementById('statBalance').textContent = formatCurrency(balance); document.getElementById('statRevenue').textContent = formatCurrency(income); }

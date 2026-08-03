@@ -108,7 +108,7 @@
         async function savePriceCatalogItem(){
             var id = document.getElementById('pcItemId').value;
             var name = document.getElementById('pcItemName').value.trim();
-            if(!name){ showToast('warning','اسم الصنف مطلوب',''); return; }
+            if(!name){ showToast('warning',t('msg_b5228d'),''); return; }
             var mode = document.getElementById('pcItemMode').value;
             var payload = {
                 item_name: name,
@@ -138,31 +138,31 @@
                 if(id){
                     const { error } = await supabaseClient.from('item_price_catalog').update(payload).eq('id', id);
                     if(error) throw error;
-                    showToast('success','تم التحديث','');
+                    showToast('success',t('msg_71326f'),'');
                 } else {
                     payload.exchange_rate_used = priceCatalogRate;
                     payload.created_by = currentUser.id;
                     const { error } = await supabaseClient.from('item_price_catalog').insert(payload);
                     if(error) throw error;
-                    showToast('success','تمت الإضافة','');
+                    showToast('success',t('msg_937bdd'),'');
                 }
                 closeModal('priceCatalogItemModal');
                 await loadPriceCatalogModule();
             }catch(e){
                 console.error('savePriceCatalogItem', e);
-                showToast('error','تعذّر الحفظ', String((e&&e.message)||e));
+                showToast('error',t('msg_de0332'), String((e&&e.message)||e));
             }
         }
         async function deletePriceCatalogItem(id){
-            if(!(await confirmStyled('متأكد من حذف هذا الصنف؟', {type:'danger'}))) return;
+            if(!(await confirmStyled(t('msg_9652fb'), {type:'danger'}))) return;
             try{
                 const { error } = await supabaseClient.from('item_price_catalog').delete().eq('id', id);
                 if(error) throw error;
-                showToast('success','تم الحذف','');
+                showToast('success',t('msg_3569a8'),'');
                 await loadPriceCatalogModule();
             }catch(e){
                 console.error('deletePriceCatalogItem', e);
-                showToast('error','تعذّر الحذف', String((e&&e.message)||e));
+                showToast('error',t('msg_277e1c'), String((e&&e.message)||e));
             }
         }
         function openExchangeRateModal(){
@@ -175,8 +175,8 @@
             var rate = parseFloat(document.getElementById('exchangeRateInput').value);
             var mkt = parseFloat(document.getElementById('pcMarketingPctInput').value);
             var prof = parseFloat(document.getElementById('pcProfitPctInput').value);
-            if(!rate || rate<=0){ showToast('warning','أدخل سعر صرف صحيح',''); return; }
-            if(isNaN(mkt) || mkt<0 || isNaN(prof) || prof<0){ showToast('warning','أدخل نسب صحيحة',''); return; }
+            if(!rate || rate<=0){ showToast('warning',t('msg_bad521'),''); return; }
+            if(isNaN(mkt) || mkt<0 || isNaN(prof) || prof<0){ showToast('warning',t('msg_9e86b3'),''); return; }
             try{
                 const { error } = await supabaseClient.from('price_catalog_settings').update({usd_to_sdg_rate: rate, marketing_pct: mkt, profit_pct: prof, updated_by: currentUser.id}).eq('id',1);
                 if(error) throw error;
@@ -184,14 +184,14 @@
                 priceCatalogMarketingPct = mkt;
                 priceCatalogProfitPct = prof;
                 closeModal('exchangeRateModal');
-                showToast('success','تم تحديث الإعدادات','كل الأصناف تحدّثت فوراً بالإعدادات الجديدة');
+                showToast('success',t('msg_b4b87b'),t('msg_6ad96c'));
                 var rd = document.getElementById('pcRateDisplay'); if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' جنيه';
                 var md = document.getElementById('pcMarketingDisplay'); if(md) md.textContent = priceCatalogMarketingPct+'٪';
                 var pd = document.getElementById('pcProfitDisplay'); if(pd) pd.textContent = priceCatalogProfitPct+'٪';
                 renderPriceCatalogTable();
             }catch(e){
                 console.error('saveExchangeRate', e);
-                showToast('error','تعذّر الحفظ', String((e&&e.message)||e));
+                showToast('error',t('msg_de0332'), String((e&&e.message)||e));
             }
         }
         

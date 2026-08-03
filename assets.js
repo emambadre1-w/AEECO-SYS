@@ -158,7 +158,7 @@
             const purchase = document.getElementById('asPurchaseDate').value || null;
             if (!name || !code || !purchase || !(cost >= 0)) { showToast('warning', t('fillRequired'), ''); return; }
             const salvage = parseFloat(document.getElementById('asSalvage').value) || 0;
-            if (salvage > cost) { showToast('warning', 'قيمة غير منطقية', 'القيمة التخريدية أكبر من تكلفة الشراء'); return; }
+            if (salvage > cost) { showToast('warning', t('msg_748972'), t('msg_0d3e26')); return; }
             const asset = {
                 id: id,
                 code: code,
@@ -185,7 +185,7 @@
         async function deleteAsset(id) {
             const a = assetsCache.find(x => String(x.id) === String(id));
             if (!a) return;
-            if (!(await confirmStyled('حذف الأصل "' + (a.name || '') + '" نهائيًا؟\nإن كان الأصل قد بيع أو شُطب، الأفضل تغيير حالته بدل حذفه للحفاظ على السجل.', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_a8dd1b') + (a.name || '') + '" نهائيًا؟\nإن كان الأصل قد بيع أو شُطب، الأفضل تغيير حالته بدل حذفه للحفاظ على السجل.', {type:'danger'}))) return;
             const { error } = await supabaseClient.from('fixed_assets').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Assets', 'delete', a.name || id);
@@ -234,12 +234,12 @@
 
         async function uploadAssetDocument() {
             const assetId = document.getElementById('assetId').value;
-            if (!assetId) { showToast('warning', 'احفظ الأصل أولاً', 'ثم عاود فتح التعديل لإضافة مستندات'); return; }
+            if (!assetId) { showToast('warning', t('msg_5d0ef4'), t('msg_cce93e')); return; }
             const label = document.getElementById('asDocLabel').value.trim();
             const fileInput = document.getElementById('asDocFile');
             const file = fileInput && fileInput.files[0];
-            if (!file) { showToast('warning', 'اختر ملف أولاً', ''); return; }
-            if (!label) { showToast('warning', 'اكتب اسم المستند', 'مثال: فاتورة الشراء'); return; }
+            if (!file) { showToast('warning', t('msg_b8aae5'), ''); return; }
+            if (!label) { showToast('warning', t('msg_b49f1a'), t('msg_f7aab9')); return; }
             const status = document.getElementById('asDocStatus');
             status.textContent = 'جارٍ الرفع...';
             try {
@@ -257,12 +257,12 @@
                 showToast('success', t('dataSaved'), label);
             } catch (e) {
                 status.textContent = '';
-                showToast('error', 'تعذّر رفع المستند', e.message || '');
+                showToast('error', t('msg_aa2ea0'), e.message || '');
             }
         }
 
         async function deleteAssetDocument(id, assetId) {
-            if (!(await confirmStyled('هل أنت متأكد من حذف هذا المستند؟', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_334bab'), {type:'danger'}))) return;
             const { error } = await supabaseClient.from('asset_documents').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Assets', 'delete', 'مستند أصل');

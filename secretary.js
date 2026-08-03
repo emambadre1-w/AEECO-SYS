@@ -48,7 +48,7 @@
             const file = document.getElementById('corrImage').files[0];
             if (file) {
                 try { document.getElementById('corrUploadStatus').textContent = 'جاري رفع الصورة...'; imagePath = await uploadSecretaryImage(file, 'correspondence'); document.getElementById('corrUploadStatus').textContent = '✅ تم الرفع'; }
-                catch (e) { showToast('error', 'فشل رفع الصورة', e.message); btn.disabled = false; return; }
+                catch (e) { showToast('error', t('msg_4d577c'), e.message); btn.disabled = false; return; }
             }
             if (!file && editId) { const ex = secretaryData.correspondence.find(x => String(x.id) === String(editId)); imagePath = ex ? (ex.image_path || null) : null; }
             const payload = {
@@ -70,16 +70,16 @@
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Secretary', editId ? 'update' : 'create', payload.subject);
             closeModal('correspondenceModal');
-            showToast('success', 'تم حفظ الخطاب', '');
+            showToast('success', t('msg_a6c808'), '');
             await loadSecretaryCorrespondence();
         }
         async function deleteCorrespondence(id) {
-            if (!(await confirmStyled('هل أنت متأكد من حذف هذا الخطاب؟ لا يمكن التراجع.', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_458820'), {type:'danger'}))) return;
             const _corrItem = secretaryData.correspondence.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('secretary_correspondence').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Secretary', 'delete', _corrItem ? _corrItem.subject : id);
-            showToast('success', 'تم الحذف', '');
+            showToast('success', t('msg_3569a8'), '');
             await loadSecretaryCorrespondence();
         }
         async function printCorrespondence(id) {
@@ -151,15 +151,15 @@
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Secretary', editId ? 'update' : 'create', title);
             closeModal('appointmentModal');
-            showToast('success', 'تم حفظ الموعد', '');
+            showToast('success', t('msg_a6e032'), '');
             await loadSecretaryAppointments();
         }
         async function deleteAppointment(id) {
-            if (!(await confirmStyled('هل أنت متأكد من حذف هذا الموعد؟ لا يمكن التراجع.', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_5caa06'), {type:'danger'}))) return;
             const _apptItem = secretaryData.appointments.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('secretary_appointments').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Secretary', 'delete', _apptItem ? _apptItem.title : id);
-            showToast('success', 'تم الحذف', '');
+            showToast('success', t('msg_3569a8'), '');
             await loadSecretaryAppointments();
         }

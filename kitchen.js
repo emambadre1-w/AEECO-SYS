@@ -103,8 +103,8 @@
         document.querySelector('.nav-item[data-page="kitchen"]').addEventListener('click', () => { if (currentUser) loadKitchenModule(); });
         async function runFullBackup(){
             if (!currentUser || !['gm','admin'].includes(currentUser.role)) { showToast('error', t('accessDenied'), t('accessDeniedMsg')); return; }
-            if (typeof XLSX === 'undefined') { showToast('error', 'خطأ', 'مكتبة Excel غير محمّلة، انتظر ثانية وأعد المحاولة'); return; }
-            if (typeof supabaseClient === 'undefined' || !supabaseClient) { showToast('error', 'خطأ', 'لا يوجد اتصال بقاعدة البيانات'); return; }
+            if (typeof XLSX === 'undefined') { showToast('error', t('msg_dc5b8b'), t('msg_72e455')); return; }
+            if (typeof supabaseClient === 'undefined' || !supabaseClient) { showToast('error', t('msg_dc5b8b'), t('msg_f1ef30')); return; }
             var btn = document.getElementById('fullBackupBtn');
             var origHtml = btn ? btn.innerHTML : '';
             if (btn) btn.disabled = true;
@@ -136,9 +136,9 @@
             XLSX.writeFile(wb, fn);
             if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
             if (failCount>0){
-                showToast('error', 'تم الحفظ مع ملاحظات', okCount+' جدول محفوظ، '+emptyCount+' فارغ، ⚠️ '+failCount+' تعذّر الوصول له: '+failedTables.join('، '));
+                showToast('error', t('msg_e68373'), okCount+' جدول محفوظ، '+emptyCount+' فارغ، ⚠️ '+failCount+' تعذّر الوصول له: '+failedTables.join('، '));
             } else {
-                showToast('success', 'تم إنشاء النسخة الاحتياطية', okCount+' جدول به بيانات، '+emptyCount+' جدول فارغ. الملف: '+fn);
+                showToast('success', t('msg_9ba398'), okCount+' جدول به بيانات، '+emptyCount+' جدول فارغ. الملف: '+fn);
             }
         }
         async function refreshData() {
@@ -158,8 +158,8 @@
                 if (typeof loadPMModule === 'function' && document.getElementById('page-pm')?.classList.contains('active')) await loadPMModule();
                 if (typeof loadKitchenModule === 'function' && document.getElementById('page-kitchen')?.classList.contains('active')) await loadKitchenModule();
                 if (typeof loadSecretaryModule === 'function' && document.getElementById('page-secretary')?.classList.contains('active')) await loadSecretaryModule();
-                showToast('success', 'تم التحديث', '');
-            } catch (e) { console.warn('refresh:', e); showToast('error', 'خطأ', 'تعذّر التحديث'); }
+                showToast('success', t('msg_71326f'), '');
+            } catch (e) { console.warn('refresh:', e); showToast('error', t('msg_dc5b8b'), t('msg_a0ddbb')); }
             if (btn) btn.classList.remove('spinning');
         }
         // ===================== Kitchen tab switching =====================
@@ -219,21 +219,21 @@
             else { ({ error } = await supabaseClient.from('kitchen_items').insert(payload)); }
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Kitchen', editId ? 'update' : 'create', name);
-            showToast('success', 'تم الحفظ', '');
+            showToast('success', t('msg_7b9c60'), '');
             closeModal('kitchenItemModal');
             await loadKitchenItems();
         }
         async function deleteKitchenItem(id) {
-            if (!(await confirmStyled('هل أنت متأكد من حذف هذا الصنف؟ (لن تتأثر سجلات الحركة السابقة) — لا يمكن التراجع.', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_2200db'), {type:'danger'}))) return;
             const _kiItem = kitchenData.items.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('kitchen_items').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Kitchen', 'delete', _kiItem ? _kiItem.name : id);
-            showToast('success', 'تم الحذف', '');
+            showToast('success', t('msg_3569a8'), '');
             await loadKitchenItems();
         }
         function openKitchenMovementModal() {
-            if (!kitchenData.items.length) { showToast('warning', 'أضف صنفًا أولًا', ''); return; }
+            if (!kitchenData.items.length) { showToast('warning', t('msg_6f3039'), ''); return; }
             document.getElementById('kitchenMovementForm').reset();
             document.getElementById('kMovItem').innerHTML = kitchenData.items.map(i => `<option value="${i.id}">${esc(i.name)}</option>`).join('');
             document.getElementById('kMovDate').value = new Date().toISOString().slice(0, 10);
@@ -260,7 +260,7 @@
                 const newQty = (parseFloat(it.quantity) || 0) + (type === 'in' ? qty : -qty);
                 await supabaseClient.from('kitchen_items').update({ quantity: newQty }).eq('id', itemId);
             }
-            showToast('success', 'تم الحفظ', '');
+            showToast('success', t('msg_7b9c60'), '');
             closeModal('kitchenMovementModal');
             await loadKitchenItems();
             await loadKitchenMovements();
@@ -322,17 +322,17 @@
             else { ({ error } = await supabaseClient.from('kitchen_expenses').insert(payload)); }
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Kitchen', editId ? 'update' : 'create', desc);
-            showToast('success', 'تم الحفظ', '');
+            showToast('success', t('msg_7b9c60'), '');
             closeModal('kitchenExpenseModal');
             await loadKitchenExpenses();
         }
         async function deleteKitchenExpense(id) {
-            if (!(await confirmStyled('هل أنت متأكد من حذف هذا المصروف؟ لا يمكن التراجع.', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_9c95f9'), {type:'danger'}))) return;
             const _keItem = kitchenData.expenses.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('kitchen_expenses').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Kitchen', 'delete', _keItem ? _keItem.description : id);
-            showToast('success', 'تم الحذف', '');
+            showToast('success', t('msg_3569a8'), '');
             await loadKitchenExpenses();
         }
         // ===================== Kitchen: Invoices + Bank Notifications =====================
@@ -402,7 +402,7 @@
             const file = document.getElementById('kInvImage').files[0];
             if (file) {
                 try { document.getElementById('kInvUploadStatus').textContent = 'جاري رفع الصورة...'; imagePath = await uploadKitchenImage(file, 'invoices'); document.getElementById('kInvUploadStatus').textContent = '✅ تم الرفع'; }
-                catch (e) { showToast('error', 'فشل رفع الصورة', e.message); btn.disabled = false; return; }
+                catch (e) { showToast('error', t('msg_4d577c'), e.message); btn.disabled = false; return; }
             }
             if (!file && editId) { const ex = kitchenData.invoices.find(x => String(x.id) === String(editId)); imagePath = ex ? (ex.image_path || null) : null; }
             const payload = {
@@ -425,16 +425,16 @@
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Kitchen', editId ? 'update' : 'create', payload.number);
             closeModal('kitchenInvoiceModal');
-            showToast('success', 'تم حفظ الفاتورة', payload.number);
+            showToast('success', t('msg_776f0e'), payload.number);
             await loadKitchenInvoices();
         }
         async function deleteKitchenInvoice(id) {
-            if (!(await confirmStyled('هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع.', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_bfcf85'), {type:'danger'}))) return;
             const _kinvItem = kitchenData.invoices.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('kitchen_invoices').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Kitchen', 'delete', _kinvItem ? _kinvItem.number : id);
-            showToast('success', 'تم الحذف', '');
+            showToast('success', t('msg_3569a8'), '');
             await loadKitchenInvoices();
         }
         async function loadKitchenBank() {
@@ -471,7 +471,7 @@
             const file = document.getElementById('kBankImage').files[0];
             if (file) {
                 try { document.getElementById('kBankUploadStatus').textContent = 'جاري رفع الصورة...'; imagePath = await uploadKitchenImage(file, 'bank'); document.getElementById('kBankUploadStatus').textContent = '✅ تم الرفع'; }
-                catch (e) { showToast('error', 'فشل رفع الصورة', e.message); btn.disabled = false; return; }
+                catch (e) { showToast('error', t('msg_4d577c'), e.message); btn.disabled = false; return; }
             }
             if (!file && editId) { const ex = kitchenData.bank.find(x => String(x.id) === String(editId)); imagePath = ex ? (ex.image_path || null) : null; }
             const payload = {
@@ -493,16 +493,16 @@
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Kitchen', editId ? 'update' : 'create', payload.bank_name);
             closeModal('kitchenBankModal');
-            showToast('success', 'تم حفظ الإشعار', '');
+            showToast('success', t('msg_6f12ca'), '');
             await loadKitchenBank();
         }
         async function deleteKitchenBank(id) {
-            if (!(await confirmStyled('هل أنت متأكد من حذف هذا الإشعار؟ لا يمكن التراجع.', {type:'danger'}))) return;
+            if (!(await confirmStyled(t('msg_774589'), {type:'danger'}))) return;
             const _kbItem = kitchenData.bank.find(x => String(x.id) === String(id));
             const { error } = await supabaseClient.from('kitchen_bank_notifications').delete().eq('id', id);
             if (error) { showToast('error', 'Error', error.message); return; }
             logActivity('Kitchen', 'delete', _kbItem ? _kbItem.bank_name : id);
-            showToast('success', 'تم الحذف', '');
+            showToast('success', t('msg_3569a8'), '');
             await loadKitchenBank();
         }
         function openAddUserModal() {
