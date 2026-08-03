@@ -87,7 +87,7 @@
                 document.getElementById('pcItemShipmentRef').value = it.shipment_ref||'';
                 document.getElementById('pcItemNotes').value = it.notes||'';
             } else {
-                document.getElementById('pcItemModalTitle').textContent = 'إضافة صنف';
+                document.getElementById('pcItemModalTitle').textContent = t('addItem');
                 document.getElementById('pcItemName').value = '';
                 document.getElementById('pcItemCode').value = '';
                 document.getElementById('pcItemUnit').value = '';

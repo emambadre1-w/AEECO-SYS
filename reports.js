@@ -145,7 +145,7 @@
                 c.textAlign = 'center'; c.textBaseline = 'middle';
                 c.fillStyle = '#64748B';
                 c.font = '600 11px Cairo, Arial, sans-serif';
-                c.fillText('الإجمالي', cx, cy - 14);
+                c.fillText(t('grossSalary'), cx, cy - 14);
                 c.fillStyle = '#0F172A';
                 c.font = '800 17px Cairo, Arial, sans-serif';
                 c.fillText(exdMoney(total), cx, cy + 8);

@@ -70,7 +70,7 @@
                 addSheet('المشاريع-المخاطر', ((typeof pmRisks !== 'undefined' && pmRisks) || []).map(r => ({ 'المشروع': (((typeof pmProjects !== 'undefined' && pmProjects) || []).find(p => p.id === r.project_id) || {}).name || '', 'الخطر': r.title, 'الاحتمال': r.likelihood || '', 'الأثر': r.impact || '' })));
                 addSheet('كتالوج الأسعار', ((typeof priceCatalogItems !== 'undefined' && priceCatalogItems) || []).map(i => ({ 'الصنف': i.item_name, 'الكود': i.item_code || '', 'الوضع': i.pricing_mode === 'import' ? 'استيراد' : 'بسيط' })));
             }
-            const fn = all ? `تقرير_شامل_${now}.xlsx` : `${type}_${now}.xlsx`;
+            const fn = all ? `${t('optReport')}_شامل_${now}.xlsx` : `${type}_${now}.xlsx`;
             XLSX.writeFile(wb, fn);
             showToast('success', t('msg_18ed73'), fn);
         }

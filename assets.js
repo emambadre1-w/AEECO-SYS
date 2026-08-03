@@ -76,7 +76,7 @@
                 const d = computeAssetDepreciation(a);
                 const dim = assetIsOnBooks(a) ? '' : ' style="opacity:.6"';
                 const fullTag = d.fullyDepreciated ? ' <span class="badge badge-gray" style="font-size:10px">مُهلك بالكامل</span>' : '';
-                return `<tr${dim}><td style="font-family:var(--font-mono)">${esc(a.code || '-')}</td><td>${esc(a.name)}${fullTag}</td><td>${assetCategoryLabel(a.category)}</td><td>${a.purchase_date ? formatDate(a.purchase_date) : '-'}</td><td style="font-family:var(--font-mono)">${formatCurrency(a.cost)}</td><td style="font-family:var(--font-mono);color:var(--danger)">${formatCurrency(d.accumulated)}</td><td style="font-family:var(--font-mono);font-weight:700;color:var(--success)">${formatCurrency(d.nbv)}</td><td>${assetStatusBadge(a.status || 'active')}</td><td><button class="btn btn-sm btn-secondary" onclick="viewAsset('${a.id}')" title="عرض"><i class="fas fa-eye"></i></button>${canEdit ? ` <button class="btn btn-sm btn-secondary" onclick="editAsset('${a.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteAsset('${a.id}')"><i class="fas fa-trash"></i></button>` : ''}</td></tr>`;
+                return `<tr${dim}><td style="font-family:var(--font-mono)">${esc(a.code || '-')}</td><td>${esc(a.name)}${fullTag}</td><td>${assetCategoryLabel(a.category)}</td><td>${a.purchase_date ? formatDate(a.purchase_date) : '-'}</td><td style="font-family:var(--font-mono)">${formatCurrency(a.cost)}</td><td style="font-family:var(--font-mono);color:var(--danger)">${formatCurrency(d.accumulated)}</td><td style="font-family:var(--font-mono);font-weight:700;color:var(--success)">${formatCurrency(d.nbv)}</td><td>${assetStatusBadge(a.status || 'active')}</td><td><button class="btn btn-sm btn-secondary" onclick="viewAsset('${a.id}')" title=t('view')><i class="fas fa-eye"></i></button>${canEdit ? ` <button class="btn btn-sm btn-secondary" onclick="editAsset('${a.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteAsset('${a.id}')"><i class="fas fa-trash"></i></button>` : ''}</td></tr>`;
             }).join('');
         }
 
@@ -96,9 +96,9 @@
                 purchase_date: document.getElementById('asPurchaseDate').value
             };
             const life = parseInt(draft.useful_life_years, 10) || 0;
-            if (life <= 0) { box.innerHTML = '<i class="fas fa-circle-info"></i> لا يُحتسب إهلاك لهذا الأصل (العمر الإنتاجي = 0).'; return; }
+            if (life <= 0) { box.innerHTML = '<i class="fas fa-circle-info"></i> ' + t('asNoDep'); return; }
             const d = computeAssetDepreciation(draft);
-            box.innerHTML = '<b>الإهلاك المحتسب تلقائيًا:</b> ' + formatCurrency(d.annual) + ' سنويًا · مجمع الإهلاك حتى اليوم ' + formatCurrency(d.accumulated) + ' · القيمة الدفترية ' + formatCurrency(d.nbv) + (d.fullyDepreciated ? ' <b>(مُهلك بالكامل)</b>' : '');
+            box.innerHTML = '<b>' + t('asDepCalc') + '</b> ' + formatCurrency(d.annual) + ' ' + t('asPerYearAccum') + ' ' + formatCurrency(d.accumulated) + ' ' + t('asBookVal') + ' ' + formatCurrency(d.nbv) + (d.fullyDepreciated ? ' <b>' + t('asFullyDep') + '</b>' : '');
         }
 
         async function populateAssetEmployeeDropdown() {
@@ -109,7 +109,7 @@
                 try { const { data: rows } = await supabaseClient.from('employees').select('id,name,status').order('name'); emps = rows || []; } catch (e) { emps = []; }
             }
             const active = emps.filter(e => (e.status || 'active') !== 'terminated');
-            sel.innerHTML = '<option value="">بدون</option>' + active.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('');
+            sel.innerHTML = '<option value="">' + t('noneOpt') + '</option>' + active.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('');
         }
 
         async function openAddAssetModal() {
@@ -120,7 +120,7 @@
             document.getElementById('asDocLabel').value = '';
             const df = document.getElementById('asDocFile'); if (df) df.value = '';
             document.getElementById('asDocStatus').textContent = '';
-            document.getElementById('asDocsList').innerHTML = '<div style="font-size:12px;color:var(--text-muted)">احفظ الأصل أولاً قبل إضافة مستندات</div>';
+            document.getElementById('asDocsList').innerHTML = '<div style="font-size:12px;color:var(--text-muted)">' + t('saveAssetFirstDocs') + '</div>';
             renderAssetDepPreview();
             openModal('assetModal');
         }
@@ -199,20 +199,20 @@
             const d = computeAssetDepreciation(a);
             const emp = (data.employees || []).find(e => e.id === a.employee_id);
             const rows = [
-                ['الكود', esc(a.code || '-')],
-                ['اسم الأصل', esc(a.name || '-')],
-                ['الفئة', assetCategoryLabel(a.category)],
-                ['الحالة', assetStatusBadge(a.status || 'active')],
-                ['تاريخ الشراء', a.purchase_date ? formatDate(a.purchase_date) : '-'],
+                [t('assetCode'), esc(a.code || '-')],
+                [t('assetName'), esc(a.name || '-')],
+                [t('category'), assetCategoryLabel(a.category)],
+                [t('status'), assetStatusBadge(a.status || 'active')],
+                [t('purchaseDate'), a.purchase_date ? formatDate(a.purchase_date) : '-'],
                 ['تكلفة الشراء', formatCurrency(a.cost)],
                 ['العمر الإنتاجي', (a.useful_life_years || 0) > 0 ? (a.useful_life_years + ' سنة') : 'لا يُهلك'],
-                ['القيمة التخريدية', formatCurrency(a.salvage_value || 0)],
+                [t('salvageValue'), formatCurrency(a.salvage_value || 0)],
                 ['الإهلاك السنوي', formatCurrency(d.annual)],
                 ['مجمع الإهلاك حتى اليوم', formatCurrency(d.accumulated) + (d.fullyDepreciated ? ' (مُهلك بالكامل)' : '')],
-                ['صافي القيمة الدفترية', '<b>' + formatCurrency(d.nbv) + '</b>'],
-                ['الموقع', esc(a.location || '-')],
-                ['المسؤول عنه', emp ? esc(emp.name) : '-'],
-                ['ملاحظات', esc(a.notes || '-')]
+                [t('assetsNBV'), '<b>' + formatCurrency(d.nbv) + '</b>'],
+                [t('location'), esc(a.location || '-')],
+                [t('responsibleEmployee'), emp ? esc(emp.name) : '-'],
+                [t('notes'), esc(a.notes || '-')]
             ];
             showDetailsModal('بيانات الأصل', rows);
         }
@@ -222,10 +222,10 @@
             const box = document.getElementById('asDocsList');
             if (!box) return;
             if (!assetId) { box.innerHTML = ''; return; }
-            box.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">جارٍ التحميل...</div>';
+            box.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">' + t('loadingDots') + '</div>';
             const { data: docs, error } = await supabaseClient.from('asset_documents').select('*').eq('asset_id', assetId).order('uploaded_at', { ascending: false });
-            if (error) { box.innerHTML = '<div style="font-size:12px;color:var(--danger)">تعذّر تحميل المستندات</div>'; return; }
-            if (!docs || !docs.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">لا توجد مستندات مرفوعة</div>'; return; }
+            if (error) { box.innerHTML = '<div style="font-size:12px;color:var(--danger)">' + t('docsLoadFail') + '</div>'; return; }
+            if (!docs || !docs.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">' + t('noDocsUploaded') + '</div>'; return; }
             box.innerHTML = docs.map(dd => {
                 const url = supabaseClient.storage.from('asset-documents').getPublicUrl(dd.file_path).data.publicUrl;
                 return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg-secondary);border-radius:6px;margin-bottom:6px"><a href="${url}" target="_blank" rel="noopener" style="font-size:13px;color:var(--text-primary);text-decoration:none"><i class="fas fa-file-lines" style="color:#0B6E4F"></i> ${esc(dd.name)}</a><button type="button" class="btn btn-sm btn-danger" onclick="deleteAssetDocument('${dd.id}','${dd.asset_id}')"><i class="fas fa-trash"></i></button></div>`;
@@ -241,7 +241,7 @@
             if (!file) { showToast('warning', t('msg_b8aae5'), ''); return; }
             if (!label) { showToast('warning', t('msg_b49f1a'), t('msg_f7aab9')); return; }
             const status = document.getElementById('asDocStatus');
-            status.textContent = 'جارٍ الرفع...';
+            status.textContent = t('uploadingDots');
             try {
                 const ext = file.name.split('.').pop();
                 const path = assetId + '/' + Date.now() + '.' + ext;

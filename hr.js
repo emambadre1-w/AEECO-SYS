@@ -96,7 +96,7 @@
                 attached_docs: _docs.join('، ') || null
             };
         } if (_editReqId) { const _upd = Object.assign({ title, description, amount: amount ? parseFloat(amount) : null }, _leaveExtra); const { error: _ee } = await supabaseClient.from('employee_requests').update(_upd).eq('id', _editReqId).eq('requester_id', currentUser.id); _editReqId = null; if (_ee) { showToast('error', 'Error', _ee.message); return; } closeModal('newRequestModal'); showToast('success', t('msg_d1e248'), title); var _rt2=document.getElementById('reqType'); if(_rt2) _rt2.disabled=false; await loadRequestsModule(); await renderRoleDashboard(); return; }
-        const _allStages = REQUEST_ROUTES[type] || []; const stages = _allStages.filter(st => st !== currentUser.role); const _autoApprove = stages.length === 0; const payload = Object.assign({ requester_id: currentUser.id, type, title, description, amount: amount ? parseFloat(amount) : null, current_stage: _autoApprove ? null : stages[0], status: _autoApprove ? 'approved' : 'pending', stage_history: [] }, _fcExtra, _leaveExtra); const { error } = await supabaseClient.from('employee_requests').insert(payload); if (error) { showToast('error', 'Error', error.message); return; } closeModal('newRequestModal'); showToast('success', t('requestSubmitted'), title); if (!_autoApprove) { await notifyRole(stages[0], `📋 طلب جديد: ${title}`, `من ${currentUser.full_name} — ${t('reqType'+type.charAt(0).toUpperCase()+type.slice(1))}`, 'info', 'requests'); notifyApproverEmail(stages[0], title, type, currentUser.full_name); } await loadRequestsModule(); await renderRoleDashboard(); }
+        const _allStages = REQUEST_ROUTES[type] || []; const stages = _allStages.filter(st => st !== currentUser.role); const _autoApprove = stages.length === 0; const payload = Object.assign({ requester_id: currentUser.id, type, title, description, amount: amount ? parseFloat(amount) : null, current_stage: _autoApprove ? null : stages[0], status: _autoApprove ? 'approved' : 'pending', stage_history: [] }, _fcExtra, _leaveExtra); const { error } = await supabaseClient.from('employee_requests').insert(payload); if (error) { showToast('error', 'Error', error.message); return; } closeModal('newRequestModal'); showToast('success', t('requestSubmitted'), title); if (!_autoApprove) { await notifyRole(stages[0], `📋 ${t('newRequest')}: ${title}`, `من ${currentUser.full_name} — ${t('reqType'+type.charAt(0).toUpperCase()+type.slice(1))}`, 'info', 'requests'); notifyApproverEmail(stages[0], title, type, currentUser.full_name); } await loadRequestsModule(); await renderRoleDashboard(); }
         async function loadRequestsModule() { const { data: reqs, error } = await supabaseClient.from('employee_requests').select('*').order('created_at', { ascending: false }); if (error) { console.error(error); return; } allRequestsCache = reqs || []; const { data: profs } = await supabaseClient.from('profiles').select('*'); profilesCache = {}; (profs || []).forEach(p => profilesCache[p.id] = p); if (!profilesCache[currentUser.id]) profilesCache[currentUser.id] = currentUser; const pendingForMe = allRequestsCache.filter(r => r.status === 'pending' && canActOnRequest(r)).length; const badge = document.getElementById('pendingApprovalsCount'); if (pendingForMe > 0) { badge.textContent = pendingForMe; badge.classList.remove('app-hidden'); } else { badge.classList.add('app-hidden'); } renderRequestsTable(); }
         async function deleteRequest(id){
             if(!(await confirmStyled(t('msg_717d59'), {type:'danger'}))) return;
@@ -123,7 +123,7 @@
             const requester = profilesCache[req.requester_id];
             const stages = REQUEST_ROUTES[req.type] || [];
             const history = req.stage_history || [];
-            const stageNames = { hr: 'الموارد البشرية (HR)', accountant: 'المحاسبة', gm: 'المدير العام', financial_manager: 'المدير المالي', internal_auditor: 'المراجع الداخلي' };
+            const stageNames = { hr: 'الموارد البشرية (HR)', accountant: t('accounting'), gm: 'المدير العام', financial_manager: t('roleFinancial_manager'), internal_auditor: t('roleInternal_auditor') };
             const typeLabel = t('reqType' + req.type.charAt(0).toUpperCase() + req.type.slice(1));
             const statusBadge = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' }[req.status];
             const statusAr = { pending: t('statusPending'), approved: t('statusApproved'), rejected: t('statusRejected') }[req.status];
@@ -147,7 +147,7 @@
             // Step 0: Employee submitted
             html += `<div class="req-tracker-step done">
                 <div class="req-step-circle done"><i class="fas fa-paper-plane"></i></div>
-                <div class="req-step-body"><div class="req-step-name">تقديم الطلب</div><div class="req-step-detail">${requester?.full_name || 'الموظف'}</div><div class="req-step-time">${formatDateTime(req.created_at)}</div></div>
+                <div class="req-step-body"><div class="req-step-name">تقديم الطلب</div><div class="req-step-detail">${requester?.full_name || t('employee')}</div><div class="req-step-time">${formatDateTime(req.created_at)}</div></div>
             </div>`;
             // Approval stages
             stages.forEach(stage => {
@@ -202,7 +202,7 @@
                 }
             } catch (e) { console.warn('leave sync:', e); }
         }
-        if (decision === 'rejected') { await notifyUser(req.requester_id, `❌ تم رفض طلبك: ${req.title}`, comment || `رفضه ${currentUser.full_name}`, 'danger', 'requests'); } else if (update.status === 'approved') { await notifyUser(req.requester_id, `✅ تم اعتماد طلبك: ${req.title}`, 'مبروك! الطلب مكتمل وتم اعتماده', 'success', 'requests'); } else { await notifyRole(update.current_stage, `📋 طلب بانتظار موافقتك: ${req.title}`, `وافق عليه ${currentUser.full_name} — من ${profilesCache[req.requester_id]?.full_name||'موظف'}`, 'info', 'requests'); notifyApproverEmail(update.current_stage, req.title, req.type, profilesCache[req.requester_id]?.full_name||'موظف'); } await loadRequestsModule(); await renderRoleDashboard(); }
+        if (decision === 'rejected') { await notifyUser(req.requester_id, `❌ ${t('optDone')} ${t('rejectAction')} طلبك: ${req.title}`, comment || `${t('rejectAction')}ه ${currentUser.full_name}`, 'danger', 'requests'); } else if (update.status === 'approved') { await notifyUser(req.requester_id, `✅ ${t('optDone')} اع${t('optDone')}اد طلبك: ${req.title}`, 'مبروك! الطلب مكتمل وتم اعتماده', 'success', 'requests'); } else { await notifyRole(update.current_stage, `📋 طلب ب${t('optPendingShort')} موافقتك: ${req.title}`, `وافق عليه ${currentUser.full_name} — من ${profilesCache[req.requester_id]?.full_name||t('roleEmployee')}`, 'info', 'requests'); notifyApproverEmail(update.current_stage, req.title, req.type, profilesCache[req.requester_id]?.full_name||t('roleEmployee')); } await loadRequestsModule(); await renderRoleDashboard(); }
         function initRealtime() { supabaseClient.channel('notifs-' + currentUser.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUser.id}` }, (payload) => { notificationsCache.unshift(payload.new); updateNotifBadge(); renderNotifications(); showToast('info', payload.new.title, payload.new.message || ''); }).subscribe(); supabaseClient.channel('rt-tickets').on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, function(){ _rtReload('tickets'); }).subscribe(); supabaseClient.channel('rt-requests').on('postgres_changes', { event: '*', schema: 'public', table: 'employee_requests' }, function(){ _rtReload('requests'); }).subscribe(); }
         async function _prSignedImg(path) {
             if (!path) return '';
@@ -237,7 +237,7 @@
                 if (openTickets > 0) parts.push(`<strong>${openTickets}</strong> open ${openTickets === 1 ? 'ticket' : 'tickets'}`);
             } else {
                 if (pendingReqs > 0) parts.push(`<strong>${pendingReqs}</strong> ${pendingReqs === 1 ? 'طلب ينتظر' : 'طلبات تنتظر'} موافقتك`);
-                if (openTickets > 0) parts.push(`<strong>${openTickets}</strong> ${openTickets === 1 ? 'تذكرة مفتوحة' : 'تذاكر مفتوحة'}`);
+                if (openTickets > 0) parts.push(`<strong>${openTickets}</strong> ${openTickets === 1 ? 'تذكرة مفتوحة' : t('openTickets')}`);
             }
             host.innerHTML = `<div class="quick-glance-card"><i class="fas fa-bolt"></i><span>${parts.join(' &nbsp;&middot;&nbsp; ')}</span></div>`;
         }
@@ -297,14 +297,14 @@
             const _dept = tk.created_by ? await _resolveDept(tk.created_by) : '-';
             const rows = [
                 ['رقم التذكرة', '#'+String(tk.id).slice(-6).toUpperCase()],
-                ['العنوان', esc(tk.title||'-')],
-                ['الوصف', esc(tk.description||'-')],
-                ['الأولوية', t(tk.priority)],
-                ['الحالة', t(tk.status)],
-                ['الفئة', tk.category ? t(tk.category) : '-'],
-                ['مقدّم الطلب', esc(tk.submittedBy||'-')],
-                ['القسم', esc(_dept)],
-                ['التاريخ', formatDateTime(tk.createdAt)]
+                [t('title'), esc(tk.title||'-')],
+                [t('description'), esc(tk.description||'-')],
+                [t('priority'), t(tk.priority)],
+                [t('status'), t(tk.status)],
+                [t('category'), tk.category ? t(tk.category) : '-'],
+                [t('requester'), esc(tk.submittedBy||'-')],
+                [t('department'), esc(_dept)],
+                [t('createdAt'), formatDateTime(tk.createdAt)]
             ];
             if(tk.resolution_note){ rows.push(['🔧 ملاحظة الحل', esc(tk.resolution_note)]); }
             let body = rows.map(r=>`<div style="display:flex;gap:12px;padding:9px 0;border-bottom:0.5px solid var(--border);"><div style="width:110px;color:var(--text-muted);font-size:13px;flex-shrink:0;">${r[0]}</div><div style="flex:1;font-size:14px;line-height:1.6;word-break:break-word;">${r[1]}</div></div>`).join('');
@@ -323,13 +323,13 @@
             const item = data.equipment.find(x=>String(x.id)===String(id));
             if(!item) return;
             const rows = [
-                ['رقم الأصل', esc(item.assetId||'-')],
-                ['اسم المعدة', esc(item.name||'-')],
-                ['الفئة', t(item.category)],
-                ['الحالة', t(item.status)],
-                ['المكلّف', esc(item.assignedTo||'-')],
-                ['الموقع', esc(item.location||'-')],
-                ['ملاحظات', esc(item.notes||'-')]
+                [t('assetId'), esc(item.assetId||'-')],
+                [t('equipmentName'), esc(item.name||'-')],
+                [t('category'), t(item.category)],
+                [t('status'), t(item.status)],
+                [t('assignedTo'), esc(item.assignedTo||'-')],
+                [t('location'), esc(item.location||'-')],
+                [t('notes'), esc(item.notes||'-')]
             ];
             let body = rows.map(r=>`<div style="display:flex;gap:12px;padding:9px 0;border-bottom:0.5px solid var(--border);"><div style="width:110px;color:var(--text-muted);font-size:13px;flex-shrink:0;">${r[0]}</div><div style="flex:1;font-size:14px;line-height:1.6;word-break:break-word;">${r[1]}</div></div>`).join('');
             document.getElementById('equipmentViewBody').innerHTML = body + (item.image_path ? '<div style="margin-top:14px;color:var(--text-muted);font-size:13px;">جارٍ تحميل الصورة المرفقة...</div>' : '');
@@ -631,13 +631,13 @@
                 + row('fa-phone','الهاتف', phoneHtml)
                 + row('fa-envelope','البريد', emailHtml)
                 + secTitle('fa-briefcase','البيانات الوظيفية')
-                + row('fa-calendar','تاريخ التعيين', emp.hireDate ? formatDate(emp.hireDate) : '-')
-                + row('fa-money-bill-wave','الراتب', emp.salary != null ? formatCurrency(emp.salary) : '-')
+                + row('fa-calendar',t('hireDate'), emp.hireDate ? formatDate(emp.hireDate) : '-')
+                + row('fa-money-bill-wave',t('salary'), emp.salary != null ? formatCurrency(emp.salary) : '-')
                 + row('fa-plane-departure','الإجازة السنوية', (emp.annualLeave != null ? emp.annualLeave : 21) + ' يوم')
-                + row('fa-user-tie','المدير المباشر', mgrName ? esc(mgrName) : '-')
-                + row('fa-file-signature','نوع العقد', esc(ctLabels[ctType]) + ((ctType !== 'permanent' && emp.contractEndDate) ? ' — حتى '+formatDate(emp.contractEndDate) : ''))
-                + secTitle('fa-id-card','بيانات إضافية')
-                + row('fa-id-badge','الرقم الوطني', emp.nationalId ? esc(emp.nationalId) : '-')
+                + row('fa-user-tie',t('manager'), mgrName ? esc(mgrName) : '-')
+                + row('fa-file-signature',t('contractType'), esc(ctLabels[ctType]) + ((ctType !== 'permanent' && emp.contractEndDate) ? ' — حتى '+formatDate(emp.contractEndDate) : ''))
+                + secTitle('fa-id-card',t('empExtraInfoTitle'))
+                + row('fa-id-badge',t('nationalId'), emp.nationalId ? esc(emp.nationalId) : '-')
                 + row('fa-building-columns','الحساب البنكي', emp.bankAccount ? esc(emp.bankAccount) : '-')
                 + row('fa-truck-medical','جهة اتصال الطوارئ', emergHtml)
                 + secTitle('fa-folder-open','المستندات')
@@ -660,7 +660,7 @@
                 } catch(e){ box.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">تعذّر تحميل المستندات</span>'; }
             })();
         }
-        function viewLeave(id){ var r=(data.leaves||[]).find(function(x){return x.id===id;}); if(!r) return; var emp=(data.employees||[]).find(function(x){return x.id===r.employeeId;}); showDetailsModal('تفاصيل الإجازة', [['الموظف',esc(emp?emp.name:(r.employeeId||'-'))],['النوع',esc(r.type||'-')],['من',r.fromDate?formatDate(r.fromDate):'-'],['إلى',r.toDate?formatDate(r.toDate):'-'],['الحالة',esc(r.status||'-')]]); }
+        function viewLeave(id){ var r=(data.leaves||[]).find(function(x){return x.id===id;}); if(!r) return; var emp=(data.employees||[]).find(function(x){return x.id===r.employeeId;}); showDetailsModal('تفاصيل الإجازة', [[t('employee'),esc(emp?emp.name:(r.employeeId||'-'))],[t('type'),esc(r.type||'-')],['من',r.fromDate?formatDate(r.fromDate):'-'],['إلى',r.toDate?formatDate(r.toDate):'-'],[t('status'),esc(r.status||'-')]]); }
         function contractBadgeHtml(emp) {
             const ct = emp.contractType || 'permanent';
             const typeLabels = { permanent: t('contractPermanent'), probation: t('contractProbation'), fixedTerm: t('contractFixedTerm') };
@@ -676,7 +676,7 @@
             const days = Math.ceil((new Date(emp.contractEndDate) - new Date()) / 86400000);
             return days <= 30;
         }
-        function renderEmployees() { const tbody = document.getElementById('employeesTableBody'); const filterEl = document.getElementById('empStatusFilter'); const filter = filterEl ? filterEl.value : 'all'; let list = data.employees; if (filter === 'expiringSoon') list = list.filter(isContractExpiringSoon); else if (filter && filter !== 'all') list = list.filter(e => (e.status || 'active') === filter); if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } const badge = { active: 'badge-success', onLeave: 'badge-warning', terminated: 'badge-gray' }; tbody.innerHTML = list.map(emp => { const st = emp.status || 'active'; return `<tr><td style="font-family: var(--font-mono);">${esc(emp.empId)}</td><td>${esc(emp.name)}</td><td>${esc(emp.position || '-')}</td><td>${esc(emp.department || '-')}</td><td>${esc(emp.phone || '-')}</td><td><span class="badge ${badge[st] || 'badge-gray'}">${t('status' + st.charAt(0).toUpperCase() + st.slice(1))}</span></td><td>${contractBadgeHtml(emp)}</td><td><button class="btn btn-sm btn-secondary" onclick="viewEmployee('${emp.id}')" title="عرض"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-secondary" onclick="editEmployee('${emp.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${emp.id}')"><i class="fas fa-trash"></i></button></td></tr>`; }).join(''); }
+        function renderEmployees() { const tbody = document.getElementById('employeesTableBody'); const filterEl = document.getElementById('empStatusFilter'); const filter = filterEl ? filterEl.value : 'all'; let list = data.employees; if (filter === 'expiringSoon') list = list.filter(isContractExpiringSoon); else if (filter && filter !== 'all') list = list.filter(e => (e.status || 'active') === filter); if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } const badge = { active: 'badge-success', onLeave: 'badge-warning', terminated: 'badge-gray' }; tbody.innerHTML = list.map(emp => { const st = emp.status || 'active'; return `<tr><td style="font-family: var(--font-mono);">${esc(emp.empId)}</td><td>${esc(emp.name)}</td><td>${esc(emp.position || '-')}</td><td>${esc(emp.department || '-')}</td><td>${esc(emp.phone || '-')}</td><td><span class="badge ${badge[st] || 'badge-gray'}">${t('status' + st.charAt(0).toUpperCase() + st.slice(1))}</span></td><td>${contractBadgeHtml(emp)}</td><td><button class="btn btn-sm btn-secondary" onclick="viewEmployee('${emp.id}')" title=t('view')><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-secondary" onclick="editEmployee('${emp.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${emp.id}')"><i class="fas fa-trash"></i></button></td></tr>`; }).join(''); }
         async function populateEmployeeLinkDropdowns(currentEmpId) {
             const mgrSel = document.getElementById('empManagerId');
             const others = (data.employees||[]).filter(e => e.id !== currentEmpId);
@@ -692,7 +692,7 @@
         async function saveAttendance() { const attendance = {id: generateId(), employeeId: document.getElementById('attendanceEmployee').value, checkIn: document.getElementById('attendanceCheckIn').value, checkOut: document.getElementById('attendanceCheckOut').value, date: document.getElementById('attendanceDate').value || null}; const employee = data.employees.find(e => e.id === attendance.employeeId); const { error } = await supabaseClient.from('attendance').insert(attendance); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Attendance', 'create', employee?.name || 'Unknown'); await loadAttendance(); closeModal('attendanceModal'); showToast('success', t('dataSaved'), ''); }
         function renderAttendance() { const tbody = document.getElementById('attendanceTableBody'); if (data.attendance.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } tbody.innerHTML = data.attendance.map(a => { const employee = data.employees.find(e => e.id === a.employeeId); const present = a.checkIn && a.checkOut; return `<tr><td>${formatDate(a.date)}</td><td>${esc(employee?.name || 'Unknown')}</td><td>${esc(a.checkIn || '-')}</td><td>${esc(a.checkOut || '-')}</td><td><span class="badge ${present ? 'badge-success' : 'badge-warning'}">${present ? t('attPresent') : t('attOpen')}</span></td></tr>`; }).join(''); }
         async function saveLeave() { const leave = {id: generateId(), employeeId: document.getElementById('leaveEmployee').value, type: document.getElementById('leaveType').value, fromDate: document.getElementById('leaveFromDate').value || null, toDate: document.getElementById('leaveToDate').value || null, reason: document.getElementById('leaveReason').value, status: 'pending', createdAt: new Date().toISOString()}; const employee = data.employees.find(e => e.id === leave.employeeId); const { error } = await supabaseClient.from('leaves').insert(leave); if (error) { showToast('error', 'Error', error.message); return; } logActivity('Leave', 'create', `${employee?.name || 'Unknown'} - ${t(leave.type)}`); await loadLeaves(); closeModal('leaveModal'); showToast('success', t('dataSaved'), ''); }
-        function renderLeaves() { const tbody = document.getElementById('leavesTableBody'); if (data.leaves.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } tbody.innerHTML = data.leaves.map(l => { const employee = data.employees.find(e => e.id === l.employeeId); const statusBadge = {pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger'}[l.status]; const decide = l.status === 'pending' ? `<button class="btn btn-sm btn-secondary" onclick="viewLeave('${l.id}')" title="عرض"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-success" onclick="approveLeave('${l.id}','approved')" title="${t('approveAction')}"><i class="fas fa-check"></i></button> <button class="btn btn-sm btn-secondary" onclick="approveLeave('${l.id}','rejected')" title="${t('rejectAction')}"><i class="fas fa-times"></i></button> ` : ''; return `<tr><td>${esc(employee?.name || 'Unknown')}</td><td><span class="badge badge-info">${t(l.type)}</span></td><td>${formatDate(l.fromDate)}</td><td>${formatDate(l.toDate)}</td><td><span class="badge ${statusBadge}">${t('status' + l.status.charAt(0).toUpperCase() + l.status.slice(1))}</span></td><td>${decide}<button class="btn btn-sm btn-danger" onclick="deleteLeave('${l.id}')"><i class="fas fa-trash"></i></button></td></tr>`; }).join(''); }
+        function renderLeaves() { const tbody = document.getElementById('leavesTableBody'); if (data.leaves.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">${t('noData')}</td></tr>`; return; } tbody.innerHTML = data.leaves.map(l => { const employee = data.employees.find(e => e.id === l.employeeId); const statusBadge = {pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger'}[l.status]; const decide = l.status === 'pending' ? `<button class="btn btn-sm btn-secondary" onclick="viewLeave('${l.id}')" title=t('view')><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-success" onclick="approveLeave('${l.id}','approved')" title="${t('approveAction')}"><i class="fas fa-check"></i></button> <button class="btn btn-sm btn-secondary" onclick="approveLeave('${l.id}','rejected')" title="${t('rejectAction')}"><i class="fas fa-times"></i></button> ` : ''; return `<tr><td>${esc(employee?.name || 'Unknown')}</td><td><span class="badge badge-info">${t(l.type)}</span></td><td>${formatDate(l.fromDate)}</td><td>${formatDate(l.toDate)}</td><td><span class="badge ${statusBadge}">${t('status' + l.status.charAt(0).toUpperCase() + l.status.slice(1))}</span></td><td>${decide}<button class="btn btn-sm btn-danger" onclick="deleteLeave('${l.id}')"><i class="fas fa-trash"></i></button></td></tr>`; }).join(''); }
         function usedAnnualLeave(empId) { return (data.leaves || []).filter(l => l.employeeId === empId && l.type === 'annual' && l.status === 'approved').reduce((s, l) => s + leaveDays(l), 0); }
         function leaveBalance(emp) { const ent = (emp.annualLeave != null && emp.annualLeave !== '') ? (parseFloat(emp.annualLeave) || 0) : 21; const used = usedAnnualLeave(emp.id); return { entitlement: ent, used: used, remaining: ent - used }; }
         function renderLeaveBalances() { const tbody = document.getElementById('leaveBalancesBody'); if (!tbody) return; if (!data.employees || data.employees.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-muted)">${t('noData')}</td></tr>`; return; } tbody.innerHTML = data.employees.map(emp => { const b = leaveBalance(emp); const remColor = b.remaining <= 0 ? 'var(--danger)' : (b.remaining <= 5 ? 'var(--warning)' : 'var(--success)'); return `<tr><td>${esc(emp.name)}</td><td>${b.entitlement} ${t('day')}</td><td>${b.used} ${t('day')}</td><td style="font-weight:600;color:${remColor}">${b.remaining} ${t('day')}</td></tr>`; }).join(''); }
