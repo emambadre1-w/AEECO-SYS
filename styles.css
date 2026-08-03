@@ -277,6 +277,8 @@
         .file-pick-name { font-size: 12.5px; color: var(--text-muted); }
         input[type="file"]::file-selector-button:hover { background: #0B6E4F; color: #fff; border-color: #0B6E4F; }
 .btn-en { display: block; font-size: 11px; font-weight: 600; opacity: .82; letter-spacing: 1.5px; margin-top: 2px; }
+        /* في الوضع الإنجليزي يصبح السطران متطابقين — نخفي السطر الثانوي */
+        html[lang="en"] .btn-en { display: none; }
         /* شاشات قصيرة: قلّل الارتفاع بدل أن تفيض البطاقة */
         @media (max-height: 720px) {
             .auth-card { padding: 26px 30px 24px; }
