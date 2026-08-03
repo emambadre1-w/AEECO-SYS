@@ -7,9 +7,9 @@
                     if(rateRow.profit_pct!=null) priceCatalogProfitPct = Number(rateRow.profit_pct);
                 }
             }catch(e){ console.error('loadPriceCatalogModule rate', e); }
-            var rd = document.getElementById('pcRateDisplay'); if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' جنيه';
-            var md = document.getElementById('pcMarketingDisplay'); if(md) md.textContent = priceCatalogMarketingPct+'٪';
-            var pd = document.getElementById('pcProfitDisplay'); if(pd) pd.textContent = priceCatalogProfitPct+'٪';
+            var rd = document.getElementById('pcRateDisplay'); if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' ' + t('curPound');
+            var md = document.getElementById('pcMarketingDisplay'); if(md) md.textContent = priceCatalogMarketingPct+t('pctSign');
+            var pd = document.getElementById('pcProfitDisplay'); if(pd) pd.textContent = priceCatalogProfitPct+t('pctSign');
             try{
                 const { data: items, error } = await supabaseClient.from('item_price_catalog').select('*').order('created_at',{ascending:false});
                 if(error) throw error;
@@ -48,21 +48,21 @@
             var totalUsd = 0, totalSdg = 0;
             priceCatalogItems.forEach(function(it){ var c = pcCalcItem(it); totalUsd += c.sellingUsd; totalSdg += c.sellingSdg; });
             var elU = document.getElementById('pcTotalUsd'); if(elU) elU.textContent = '$'+totalUsd.toLocaleString(undefined,{maximumFractionDigits:2});
-            var elS = document.getElementById('pcTotalSdg'); if(elS) elS.textContent = totalSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س';
+            var elS = document.getElementById('pcTotalSdg'); if(elS) elS.textContent = totalSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ' + t('curSdgShort');
             if(priceCatalogItems.length===0){
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted)">لا توجد أصناف مسجّلة بعد</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted)">' + t('pcNoItems') + '</td></tr>';
                 return;
             }
             tbody.innerHTML = priceCatalogItems.map(function(it){
                 var c = pcCalcItem(it);
-                var modeLabel = it.pricing_mode==='import' ? '<span class="badge badge-info">استيراد</span>' : '<span class="badge badge-gray">بسيط</span>';
+                var modeLabel = it.pricing_mode==='import' ? '<span class="badge badge-info">' + t('pcImport') + '</span>' : '<span class="badge badge-gray">' + t('pcSimple') + '</span>';
                 return '<tr>'
                     +'<td>'+esc(it.item_name||'-')+'</td>'
                     +'<td>'+modeLabel+'</td>'
                     +'<td>'+(it.pricing_mode==='import' ? c.qty : '-')+'</td>'
                     +'<td>'+(it.pricing_mode==='import' ? '$'+c.totalCost.toLocaleString(undefined,{maximumFractionDigits:2}) : '-')+'</td>'
-                    +'<td>$'+c.sellingUsd.toLocaleString(undefined,{maximumFractionDigits:2})+' / '+c.sellingSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td>'
-                    +'<td>$'+c.unitUsd.toLocaleString(undefined,{maximumFractionDigits:2})+' / '+c.unitSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ج.س</td>'
+                    +'<td>$'+c.sellingUsd.toLocaleString(undefined,{maximumFractionDigits:2})+' / '+c.sellingSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ' + t('curSdgShort') + '</td>'
+                    +'<td>$'+c.unitUsd.toLocaleString(undefined,{maximumFractionDigits:2})+' / '+c.unitSdg.toLocaleString(undefined,{maximumFractionDigits:0})+' ' + t('curSdgShort') + '</td>'
                     +'<td><button class="btn btn-sm btn-secondary" onclick="openPriceCatalogItemModal(\''+it.id+'\')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deletePriceCatalogItem(\''+it.id+'\')"><i class="fas fa-trash"></i></button></td>'
                     +'</tr>';
             }).join('');
@@ -72,7 +72,7 @@
             if(id){
                 var it = priceCatalogItems.find(function(x){ return x.id===id; });
                 if(!it) return;
-                document.getElementById('pcItemModalTitle').textContent = 'تعديل صنف';
+                document.getElementById('pcItemModalTitle').textContent = t('pcEditItem');
                 document.getElementById('pcItemName').value = it.item_name||'';
                 document.getElementById('pcItemCode').value = it.item_code||'';
                 document.getElementById('pcItemUnit').value = it.unit||'';
@@ -185,9 +185,9 @@
                 priceCatalogProfitPct = prof;
                 closeModal('exchangeRateModal');
                 showToast('success',t('msg_b4b87b'),t('msg_6ad96c'));
-                var rd = document.getElementById('pcRateDisplay'); if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' جنيه';
-                var md = document.getElementById('pcMarketingDisplay'); if(md) md.textContent = priceCatalogMarketingPct+'٪';
-                var pd = document.getElementById('pcProfitDisplay'); if(pd) pd.textContent = priceCatalogProfitPct+'٪';
+                var rd = document.getElementById('pcRateDisplay'); if(rd) rd.textContent = priceCatalogRate.toLocaleString()+' ' + t('curPound');
+                var md = document.getElementById('pcMarketingDisplay'); if(md) md.textContent = priceCatalogMarketingPct+t('pctSign');
+                var pd = document.getElementById('pcProfitDisplay'); if(pd) pd.textContent = priceCatalogProfitPct+t('pctSign');
                 renderPriceCatalogTable();
             }catch(e){
                 console.error('saveExchangeRate', e);
