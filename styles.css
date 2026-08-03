@@ -266,7 +266,17 @@
         .auth-card .btn-primary { padding: 14px; border-radius: 12px; background: linear-gradient(135deg,#0B6E4F,#12996E); border: none; box-shadow: 0 8px 22px rgba(11,110,79,0.34); transition: all .22s; }
         .auth-card .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(11,110,79,0.44); }
         .btn-ar { display: block; font-size: 16px; font-weight: 700; }
-        .btn-en { display: block; font-size: 11px; font-weight: 600; opacity: .82; letter-spacing: 1.5px; margin-top: 2px; }
+                /* حقول رفع الملفات: استبدال نص المتصفح الإنجليزي بزر عربي */
+        input[type="file"] { font-family: inherit; font-size: 13.5px; color: var(--text-secondary); }
+        /* الحقل الأصلي يُخفى ويُستبدل بزر مخصّص عبر JS */
+        input[type="file"].file-native { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); }
+        .file-pick { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .file-pick-btn { font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 9px 17px;
+            border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text-primary); transition: all .18s; }
+        .file-pick-btn:hover { background: #0B6E4F; color: #fff; border-color: #0B6E4F; }
+        .file-pick-name { font-size: 12.5px; color: var(--text-muted); }
+        input[type="file"]::file-selector-button:hover { background: #0B6E4F; color: #fff; border-color: #0B6E4F; }
+.btn-en { display: block; font-size: 11px; font-weight: 600; opacity: .82; letter-spacing: 1.5px; margin-top: 2px; }
         /* شاشات قصيرة: قلّل الارتفاع بدل أن تفيض البطاقة */
         @media (max-height: 720px) {
             .auth-card { padding: 26px 30px 24px; }

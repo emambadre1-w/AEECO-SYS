@@ -86,7 +86,7 @@
             const company = 'شركة الوطنية للطاقة والهندسة المحدودة';
             const now = new Date().toLocaleDateString('ar-EG');
             const logo = AEECO_INVOICE_LOGO;
-            const statAr = {pending:'قيد الانتظار',paid:'مدفوعة',overdue:'متأخرة',cancelled:'ملغاة',unpaid:'غير مدفوعة'};
+            const statAr = {pending:t('statusPending'),paid:t('paid'),overdue:t('overdue'),cancelled:t('optCancelledF'),unpaid:t('optUnpaid')};
             const amount = (parseFloat(inv.amount) || 0).toLocaleString();
             const rows = `<tr><th>رقم الفاتورة</th><td>${esc(inv.number||'-')}</td></tr><tr><th>العميل</th><td>${esc(inv.client||'-')}</td></tr><tr><th>المبلغ</th><td>${amount}</td></tr><tr><th>الحالة</th><td>${statAr[inv.status] || esc(inv.status||'-')}</td></tr><tr><th>التاريخ</th><td>${esc(inv.date||'-')}</td></tr><tr><th>تاريخ الاستحقاق</th><td>${esc(inv.dueDate||'-')}</td></tr><tr><th>ملاحظات</th><td>${esc(inv.notes||'-')}</td></tr>`;
             const win = window.open('', '_blank');

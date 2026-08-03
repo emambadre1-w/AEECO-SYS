@@ -6,7 +6,7 @@
           var box = document.getElementById('itMyTicketsList'); if(!box) return;
           var mine = (data.tickets||[]).filter(function(tk){ return tk.created_by === currentUser.id; });
           if(mine.length === 0){ box.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">لا توجد تذاكر بعد.</div>'; return; }
-          var statusMap = {open:['badge-danger','مفتوحة'], in_progress:['badge-warning','قيد المعالجة'], resolved:['badge-success','تم الحل'], closed:['badge-gray','مغلقة']};
+          var statusMap = {open:['badge-danger',t('open')], in_progress:['badge-warning',t('optTicketInProgress')], resolved:['badge-success',t('markResolved')], closed:['badge-gray',t('closed')]};
           box.innerHTML = mine.map(function(tk){
             var sb = statusMap[tk.status] || ['badge-gray', tk.status];
             var canEdit = (tk.status === 'open');

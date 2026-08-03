@@ -126,7 +126,7 @@
             const stageNames = { hr: 'الموارد البشرية (HR)', accountant: 'المحاسبة', gm: 'المدير العام', financial_manager: 'المدير المالي', internal_auditor: 'المراجع الداخلي' };
             const typeLabel = t('reqType' + req.type.charAt(0).toUpperCase() + req.type.slice(1));
             const statusBadge = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' }[req.status];
-            const statusAr = { pending: 'قيد الانتظار', approved: 'معتمد', rejected: 'مرفوض' }[req.status];
+            const statusAr = { pending: t('statusPending'), approved: t('statusApproved'), rejected: t('statusRejected') }[req.status];
             document.getElementById('reqDetailTitle').textContent = req.title;
             document.getElementById('reqDetailInfo').innerHTML = `
                 <div class="req-info-item"><label>مقدّم الطلب</label><span>${requester?.full_name || '-'}</span></div>
@@ -350,7 +350,7 @@
             document.getElementById('resolveNote').value = '';
             openModal('resolveTicketModal');
         }
-        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); document.body.style.overflow = 'hidden'; if (modalId === 'attendanceModal' || modalId === 'leaveModal' || modalId === 'payrollModal') populateEmployeeDropdowns(); if (modalId === 'stockModal') populateProductDropdown(); if (['transactionModal', 'invoiceModal', 'attendanceModal'].includes(modalId)) document.querySelector(`#${modalId} input[type="date"]`).valueAsDate = new Date(); }
+        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); document.body.style.overflow = 'hidden'; try { translateFileInputs(); } catch(e){} if (modalId === 'attendanceModal' || modalId === 'leaveModal' || modalId === 'payrollModal') populateEmployeeDropdowns(); if (modalId === 'stockModal') populateProductDropdown(); if (['transactionModal', 'invoiceModal', 'attendanceModal'].includes(modalId)) document.querySelector(`#${modalId} input[type="date"]`).valueAsDate = new Date(); }
         async function submitAddUser() {
             const full_name = document.getElementById('auFullName').value.trim();
             const email = document.getElementById('auEmail').value.trim();

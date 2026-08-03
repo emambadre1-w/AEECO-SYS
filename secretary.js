@@ -12,9 +12,9 @@
         function renderSecretaryCorrespondence() {
             const tbody = document.getElementById('correspondenceBody');
             if (!tbody) return;
-            const dirAr = { incoming: 'وارد', outgoing: 'صادر' };
+            const dirAr = { incoming: t('optIncoming'), outgoing: t('optOutgoing') };
             const dirBadge = { incoming: 'badge-info', outgoing: 'badge-primary' };
-            const statAr = { pending: 'تحت الإجراء', replied: 'تم الرد', closed: 'مغلق', info: 'للعلم' };
+            const statAr = { pending: t('optCorrPending'), replied: t('optReplied'), closed: t('optClosed'), info: t('optForInfo') };
             const statBadge = { pending: 'badge-warning', replied: 'badge-success', closed: 'badge-gray', info: 'badge-info' };
             if (!secretaryData.correspondence.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px">${t('noData')}</td></tr>`; return; }
             tbody.innerHTML = secretaryData.correspondence.map(c => `<tr><td>${esc(c.corr_date || '-')}</td><td style="font-family:var(--font-mono)">${esc(c.ref_number || '-')}</td><td><span class="badge ${dirBadge[c.direction] || 'badge-info'}">${dirAr[c.direction] || esc(c.direction)}</span></td><td>${esc(c.party)}</td><td>${esc(c.subject)}</td><td><span class="badge ${statBadge[c.status] || 'badge-info'}">${statAr[c.status] || esc(c.status)}</span></td><td>${c.image_path ? `<button class="btn btn-sm btn-secondary" onclick="viewSecretaryImage('${c.image_path}')"><i class="fas fa-image"></i></button>` : '<span style="color:var(--text-muted)">لا يوجد</span>'} <button class="btn btn-sm btn-secondary" onclick="printCorrespondence('${c.id}')" title="طباعة"><i class="fas fa-print"></i></button> <button class="btn btn-sm btn-secondary" onclick="editCorrespondence('${c.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteCorrespondence('${c.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
@@ -88,8 +88,8 @@
             const company = 'شركة الوطنية للطاقة والهندسة المحدودة';
             const now = new Date().toLocaleDateString('ar-SA');
             const logo = AEECO_INVOICE_LOGO;
-            const dirAr = { incoming: 'وارد', outgoing: 'صادر' };
-            const statAr = { pending: 'تحت الإجراء', replied: 'تم الرد', closed: 'مغلق', info: 'للعلم' };
+            const dirAr = { incoming: t('optIncoming'), outgoing: t('optOutgoing') };
+            const statAr = { pending: t('optCorrPending'), replied: t('optReplied'), closed: t('optClosed'), info: t('optForInfo') };
             const imgHtml = await _sSignedImg(c.image_path);
             const rows = `<tr><th>رقم الخطاب</th><td>${esc(c.ref_number || '-')}</td></tr><tr><th>النوع</th><td>${dirAr[c.direction] || esc(c.direction)}</td></tr><tr><th>الجهة</th><td>${esc(c.party)}</td></tr><tr><th>الموضوع</th><td>${esc(c.subject)}</td></tr><tr><th>التاريخ</th><td>${esc(c.corr_date)}</td></tr><tr><th>الحالة</th><td>${statAr[c.status] || esc(c.status)}</td></tr><tr><th>ملاحظات</th><td>${esc(c.notes || '-')}</td></tr>`;
             const win = window.open('', '_blank');
@@ -106,7 +106,7 @@
         function renderSecretaryAppointments() {
             const tbody = document.getElementById('appointmentsBody');
             if (!tbody) return;
-            const statAr = { upcoming: 'قادم', done: 'تم', postponed: 'مؤجّل', cancelled: 'ملغى' };
+            const statAr = { upcoming: t('optUpcoming'), done: t('optDone'), postponed: t('optPostponed'), cancelled: t('optCancelled') };
             const statBadge = { upcoming: 'badge-info', done: 'badge-success', postponed: 'badge-warning', cancelled: 'badge-danger' };
             if (!secretaryData.appointments.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px">${t('noData')}</td></tr>`; return; }
             const _today = _todayStr(); tbody.innerHTML = secretaryData.appointments.map(a => { const _isToday = a.appt_date === _today; const _isOver = a.appt_date && a.appt_date < _today && a.status === 'upcoming'; const _tag = _isToday ? ' <span class="badge badge-success" style="font-size:10px">اليوم</span>' : (_isOver ? ' <span class="badge badge-danger" style="font-size:10px">فات</span>' : ''); return `<tr><td>${esc(a.appt_date || '-')}${_tag}</td><td style="font-family:var(--font-mono)">${esc(a.appt_time || '-')}</td><td>${esc(a.title)}</td><td>${esc(a.with_party || '-')}</td><td>${esc(a.location || '-')}</td><td><span class="badge ${statBadge[a.status] || 'badge-info'}">${statAr[a.status] || esc(a.status)}</span></td><td><button class="btn btn-sm btn-secondary" onclick="editAppointment('${a.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteAppointment('${a.id}')"><i class="fas fa-trash"></i></button></td></tr>`; }).join('');
